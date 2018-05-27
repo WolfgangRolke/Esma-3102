@@ -1,0 +1,138 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Assumptions of Least Squares Regression
+
+This page explains the assumptions behind the method of least squares regression and how to check them.
+
+Recall that we are fitting a model of the form 
+
+$$
+y=\beta_0+\beta_1x
+$$
+
+there are **three assumptions**:
+
+1) The model is good (that is, the relationship is linear and not, say, quadratic, exponential or something else)
+
+2) The residuals have a normal distribution
+
+3) The residuals have equal variance (are homoscadastic)
+
+The second and third assumption we are already familiar with from ANOVA and correlation. 
+
+We can check these assumptions using two graphs:
+
+- Residual vs. Fits plot: this is just what it says, a scatterplot of the residuals (on y-axis) vs. the fitted values.
+
+- Normal plot of residuals
+
+Both of these graphs are done by R automatically.
+
+**1) Good Model**
+
+For this assumption draw the Residuals vs. Fits plot and check for **any pattern**
+
+Example:
+
+**Linear model is good:**
+
+```{r, echo=FALSE}
+x <- 1:50
+y <- x+rnorm(50, 0, 5) 
+fit <- lm(y~x)
+dta1 <- data.frame(x=fitted(fit),y=residuals(fit))
+plt1 <- ggplot(aes(x, y), data = dta1) + 
+                geom_point() + 
+                xlab("Fitted Values") + ylab("Residuals")+
+                geom_hline(yintercept=0,colour="blue")
+```
+```{r, echo=FALSE}
+splot(y, x, add.line = 1)
+print(plt1)
+```
+
+**Linear model is bad:**
+
+```{r, echo=FALSE}
+x <- 1:50
+y <- 0.1*x^2+rnorm(50, 0, 10) 
+fit <- lm(y~x)
+dta1 <- data.frame(x=fitted(fit),y=residuals(fit))
+plt1 <- ggplot(aes(x, y), data = dta1) + 
+                geom_point() + 
+                xlab("Fitted Values") + ylab("Residuals")+
+                geom_hline(yintercept=0,colour="blue")
+```
+```{r, echo=FALSE}
+splot(y, x, add.line = 1)
+print(plt1)
+```
+
+The U shaped pattern in the residual vs. fits plot is a very common one if the linear model is bad. 
+
+**2) Residuals have a Normal Distribution**
+
+For this assumption draw the normal probability plot and see whether the **dots form a straight line**, just as we have done it many times by now. 
+
+**3) Residuals have Equal Variance**
+
+Previously we could check the stdev within the groups and see whether they differed by more than a factor of 3. Now, though we don't have groups. Instead we will again draw the Residuals vs. Fits plot and check whether the *variance (or spread) of the dots changes as you go along the x axis*.
+  
+####Example:
+
+**Equal Variance ok:**
+
+```{r, echo=FALSE}
+x <- runif(50, 0, 10)
+y <- rnorm(50, 0, 3) 
+splot(y, x, label_x = "Fitted Values", label_y = "Residuals")
+```
+
+**Equal Variance not ok:**
+
+```{r, echo=FALSE}
+y <- rnorm(50, 0, x) 
+splot(y, x, label_x = "Fitted Values", label_y = "Residuals")
+```
+
+This can be a tricky one to decide, especially if there are few observations. 
+
+###Case Study: Wine Consumption and Heart Disease
+
+Let's check the assumptions for the wine consumption data: 
+  
+```{r}
+attach(wine) 
+slr(Heart.Disease.Deaths, Wine.Consumption)
+```
+
+the normal plot is fine, and the residual vs. fits plot is fine as far the linear model assumption goes. There is, though, an appearance of unequal variance. This judgement is made more difficult here, though, because there is very little data in the left half of the graph, and naturaly a few dots won't have a large spread. It will take time for you to be able to judge these graphs properly. In fact this one is ok. Not great, but ok.
+
+**Note** a final decision on whether the assumptions are justified is
+`r hl()$fontcolor("ALWAYS")` made based on the Residual vs. Fits Plot and the Normal plot of Residuals.
+
+```{r, echo=FALSE}
+detach(wine)
+```
+

@@ -1,0 +1,107 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Confidence Intervals
+
+One way to find out what a statistic is telling us about the corresponding parameter is to find a **confidence interval**, that is a range of likely values for the parameter.
+
+###Case Study: Exam Scores
+
+Here we will consider the variable Score, the score on two exams takes by students in a course What can we say about the average score?
+
+```{r}
+attach(examscores)
+head(examscores)
+hplot(Score)
+```
+
+shows that the histogram of the scores is roughly bell-shaped, with the peak at around 50. More precisely we find 
+
+```{r}
+mean(Score)
+```
+
+But this is based on exactly these 200 randomly selected scores, if we repeat the experiment we get different ones, and therefore a (somewhat) different mean. What can we say about the mean of all possible scores? (the **population** mean) 
+
+```{r fig.show='hide'}
+one.sample.t(Score) 
+```
+
+So what does it mean to say **a 95% confidence interval for the population mean score of (50.1, 57.4)**?  The idea here is that we now know that with a high likelihood the true population mean score is between 50.1 and 57.4. 
+
+Notice I used the word **likelihood**. It is very tempting (and many people do it in real live) to use the word **probability** here. 
+
+Unfortunately for technical reasons to difficult for us to discuss this would be wrong! 
+
+The correct interpretation of a confidence interval is this: suppose that over the next year statisticians (and other people using statistics) all over the world compute 100,000 95% confidence intervals, some for the mean, others maybe for medians or standard deviations or ..., than about 95% or about 95,000 of those intervals will actually contain the parameter that is supposed to be estimated, the other 5,000 or so will not.
+
+If the chance of getting a bad interval of 5% is to high, we can change that easily, say be finding a 99% confidence interval:
+
+
+```{r fig.show='hide'}
+one.sample.t(Score, conf.level = 99) 
+```
+
+So this interval has a likelihood of 99% so we will get a wrong one just 1 in 100 times. But there is a price:
+
+```{r}
+58.6 - 49
+57.4 - 50.1
+```
+
+so this interval is larger than the 95% one, which means there is a larger uncertainty on exactly what the value is. Finding confidence intervals always involves a trade-off:
+
+size of interval vs confidence level 
+
+###App: confint
+
+```{r eval=FALSE}
+run.app(confint)
+```
+
+This illustrates the idea of confidence intervals.
+
+What to do: 
+
+As the app starts the page on the right is empty, there is no data yet. In the panel on the left you can choose the population parameters that you want.
+
+Next move the slider to 1. Now on the Single Experiment tab you get on simulated dataset, the Summary Statistics and the confidence interval calculations. You can now run the movie and see a sequence of simulated datasets. 
+
+You can also play around and see the effects of a 
+
+a) larger sample size n &rarr; smaller intervals
+
+b) change population mean $\mu$ &rarr; changes location of interval but not its size 
+
+c) increase population standard deviation $\sigma$ &rarr; increases range of data, increases length of interval.
+
+d) increase confidence level $\alpha$ &rarr; increases length of interval.
+
+2) on Many Experiment tab 
+
+no matter how n, $\mu$ or $\sigma$ are changed, the percentage of good intervals always matches the chosen confidence level 
+
+```{r, echo=FALSE}
+detach(examscores)
+```
+

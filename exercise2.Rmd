@@ -1,0 +1,265 @@
+---
+output:
+  pdf_document:
+    fig_caption: no
+  html_document: default
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+require(knitr)
+require(ggplot2)
+require(grid)
+```
+`r hl()$basefontsize()`
+
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+#Exercise Problems 2 
+
+###Case Study: Survey of Students
+This is a fake data set I made up for this exercise. It is supposed to be from a survey of students at some College. The data is in **studentsurvey**  
+
+The variables are  
+```{r}
+colnames(studentsurvey)
+```
+Score is a combination of several questions designed to measure how "happy" they are to study at the College. A high number means more happiness. Distance is how far they live from the College.
+Make sure your answers are **complete**.
+
+**Problem 1** Is there a relationship between Score and Gender?
+
+**Problem 2** Is there a relationship between Score and Year? 
+
+**Problem 3** Is there a relationship between Score and GPA? 
+  
+**Problem 4** Is there a relationship between Score and Distance? 
+    
+**Problem 5 ** Is there a relationship between Score and Age?
+
+**Problem 6** Is there a relationship between Gender and Major? 
+    
+**Problem 7 ** Is there a relationship between Gender and Age?
+
+`r hl()$hr()`
+
+`r hl()$hr()` 
+
+```{r}
+ attach(studentsurvey) 
+```
+
+**Problem 1** Is there a relationship between Score and Gender? 
+Score is a quantitative variable and Gender is a categorical variable with two values, so this is a problem for ANOVA
+```{r}
+bplot(Score,Gender) 
+```
+The boxplot shows a slight difference between the genders. There are a few slight outliers, but they are no problem.
+```{r}
+stat.table(Score, Gender)
+```
+The test:
+```{r}
+oneway(Score, Gender)
+```
+1) Parameters of interest: means of scores of men and women  
+2) Method of analysis: two sample t test  
+3) Assumptions of Method: residuals have a normal distribution, or sample sizes are large enough 
+4) $\alpha$ = 0.05  
+5) Null hypothesis H~0~: $\mu_1~ = \mu_2$ (groups have the same mean)  
+6) Alternative hypothesis H~a~: $\mu_1 \ne \mu_2$ (groups have different means)  
+7) p value = 0.0033  
+8) 0.0033 < 0.05, there is some evidence that the group means are not the same, the women tend to score higher than the men.
+
+Assumptions:  
+
+1) Normal residuals: normal plot looks ok.  
+2) equal variance: 3*1.71 = 5.13 > 2.21, ok
+
+`r hl()$hr()`
+
+**Problem 2** Is there a relationship between Score and Year?
+Score is a quantitative variable and Year is a categorical variable, so this is a problem for ANOVA
+```{r}
+bplot(Score, Year)
+```
+The table of summary statistics is
+```{r}
+stat.table(Score, Year)
+```
+The test:
+```{r}
+oneway(Score, Year)
+```
+1) Parameters of interest: means of scores by year  
+2) Method of analysis: ANOVA   
+3) Assumptions of Method: residuals have a normal distribution, or sample sizes are large enough  
+4) $\alpha$ = 0.05   
+5) Null hypothesis H~0~: $\mu_1~ = \mu_2 = \mu_3 = \mu_4$ (groups have the same mean)  
+6) Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (some groups have different means)  
+7) p value = 0.4855  
+8) 0.4855 > 0.05, there is no evidence that the group means are not the same.
+
+Assumptions:  
+
+1) Normal residuals.  looks ok.  
+2) equal variance: 3*1.8    = 5.4 >  2.2  
+
+`r hl()$hr()`
+
+**Problem 3** Is there a relationship between Score and GPA?
+Score and GPA are both quantitative variables, so this is a problem for the **Pearson's Correlation Coefficient **.
+
+The marginal plot shows some increase in Score as the GPA increases.
+```{r, warning=FALSE}
+mplot(Score, GPA)
+```
+There are a few slight outlier, no problem, though.
+
+The test:
+```{r, warning=FALSE}
+pearson.cor(Score, GPA, rho.null = 0)
+```
+1) Parameter of interest: Pearson's correlation coefficient $\rho$  
+2) Method of analysis: test based on normal theory  
+3) Assumptions of Method: relationship is linear, there are no outliers  
+4) $\alpha$ = 0.05  
+5) H~0~: $\rho = 0$ (no relationship between Score and GPA)  
+6) H~a~: $\rho \ne 0$ (some relationship between Score and GPA)  
+7) p = 0.000  
+8) 0 < 0.05, so we reject H~0~, there is a relationship between the Score and the GPA, apparently students with a higher GPA are happier.
+
+`r hl()$hr()`
+
+**Problem 4** Is there a relationship between Score and Distance? 
+Score and Distance are both quantitative variables, so this is a problem for the **Pearson's Correlation Coefficient**.
+
+The marginal plot shows some slight outliers. The  log transform fixes it.
+
+```{r, warning=FALSE}
+mplot(Score, Distance)
+```
+```{r, warning=FALSE}
+mplot(Score, log(Distance+1))
+```
+some students apparently live very close to the school, Distance=0. For this reason we use log(Distance+1).
+
+The test:
+```{r, warning=FALSE}
+pearson.cor(Score, log(Distance+1), rho.null = 0)
+```
+1) Parameter of interest: Pearson's correlation coefficient $\rho$  
+2) Method of analysis: test based on normal theory  
+3) Assumptions of Method: relationship is linear, there are no outliers  
+4) $\alpha=0.05$  
+5) H~0~: $\rho =0$ (no relationship between Score and Distance)   
+6) H~a~: $\rho \ne 0$ (some relationship between Score and Distance) 
+7) p = 0.7305  
+8) $p>\alpha$, so we fail to reject H~0~, there is no evidence of a relationship between the Score and the Distance.
+
+`r hl()$hr()`
+
+**Problem 5 ** Is there a relationship between Score and Age?
+The marginal plot shows one severe outlier:
+
+
+```{r, warning=FALSE}
+length(Score)
+length(Age)
+mplot(Score, Age)
+```
+Unfortunately the log transform does not help, so the only way to preceed is to eliminate the outlier.
+```{r}
+which(Age==max(Age))
+```
+The test:
+```{r, warning=FALSE}
+pearson.cor(Age[-220], Score[-220], rho.null = 0)
+```
+1) Parameter of interest: Pearson's correlation coefficient $\rho$  
+2) Method of analysis: test based on normal theory  
+3) Assumptions of Method: relationship is linear, there are no outliers  
+4) $\alpha = 0.05$  
+5) H~0~: $\rho=0$ (no relationship between Score and Distance)  
+6) H~a~: $\rho \ne 0$ (some relationship between Score and Distance)  
+7) p = 0.3052  
+8) $p > \alpha$, so we fail to reject H~0~, there is no evidence of a relationship between the Score and the Age.
+
+`r hl()$hr()`
+
+**Problem 6 ** Is there a relationship between Gender and Major? 
+Gender and Major are both categorical variables, so this is a problem for the **Chisquare test of Independence**.
+
+```{r}
+ table(Gender, Major) 
+```
+```{r}
+chi.ind.test(table(Gender, Major))
+```
+1) Parameters of interest: measure of association  
+2) Method of analysis: chi-square test of independence  
+3) Assumptions of Method: all expected counts greater than 5  
+4) $\alpha = 0.05$
+5) H~0~: Classifications are independent = Gender and Major are independent  
+6) H~a~: Classifications are dependent = Gender and Major are not independent  
+7) p = 0.9664  
+8) 0.9664 > 0.05, there is no evidence of a relationship between gender and major. 
+
+`r hl()$hr()` 
+
+**Problem 7 ** Is there a relationship between Gender and Age?
+Age is a quantitative variable and Gender is a categorical variable with two values, so this is a problem for the **ANOVA**.
+
+The boxplot shows a few serious outliers. One could try transformations, but because the outliers are from especially small and large observations these won't work. 
+
+```{r}
+bplot(Age, Gender)
+bplot(log(Age), Gender)
+```
+
+**Solution 1: non-parametric method **  
+The table of summary statistics is  
+```{r}
+stat.table(Age, Gender, Mean=FALSE )
+```
+Now
+```{r}
+kruskalwallis(Age, Gender)
+```
+1) Parameters of interest: 2 medians  
+2) Method of analysis: Kruskal-Wallis  
+3) Assumptions of Method: **none**  
+4) $\alpha=0.05$   
+5) Null hypothesis H~0~: M~1~=M~2~ (group medians are the same)  
+6) Alternative hypothesis H~a~: M~1~$\ne$M~2~ (group medians are not the same)  
+7) p value = 0.2611  
+8) 0.2611 > 0.05, so we fail to reject H~0~, it seems the group medians are the same.  
+
+**Solution 2: remove outlier **
+```{r, eval=FALSE}
+which(Age==max(Age))
+```
+```{r}
+stat.table(Age[-220], Gender[-220])
+oneway(Age[-220], Gender[-220])
+```
+1) Parameters of interest: means of age by gender  
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, or sample sizes are large enough 
+4) $\alpha$ = 0.05  
+5) Null hypothesis H~0~: $\mu$~1~ = $\mu$~2~  (groups have the same mean)  
+6) Alternative hypothesis H~a~: $\mu$~1~ $\ne$ $\mu$~2~ (some groups have different means)  
+7) p value = 0.3817
+8) 0.3817 > 0.05, there is no evidence that the group means are not the same. 
+Assumptions:
+1) Normal residuals ok
+Smallest sd:  1    Largest sd : 1 , 3*1>1, ok
+
+
+```{r, echo=FALSE}
+detach(studentsurvey)
+```

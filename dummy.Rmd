@@ -1,0 +1,263 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#How to include a  Caterorical Predictor in a Regression
+
+###Case Study: Environmental, Safety and Health Attitudes
+Environment, Safety and Health Attitudes of employees of a laboratory. Employees are given a questionaire, which is then collated into an average score from 1(bad) to 10(good). We also have available the length of service of the employee and their gender.
+
+```{r}
+head(esh)
+```
+
+One of the predictor variables (Sex) is actually categorical. A  categorical variable used in a regression model is often refered to as a *dummy* variable.
+
+Let's start by looking at each predictor separately.
+
+- Years is quantitative, so do the scatterplot:
+
+```{r}
+attach(esh)
+splot(ES.H, Yrs.Serv, add.line = 1)
+```
+
+- Sex is categorical, so do the boxplot:
+
+```{r}
+bplot(ES.H, Sex)
+```
+
+The values in Sex (Male, Female) are text but in a regression we need everything to be numeric, so in order to use Sex in a regression model we first have to *code* the variable as numbers, for example Female=0 and Male=1. Then
+
+```{r}
+SexCode <- rep(0, length(Sex))
+SexCode[Sex=="Male"] <- 1
+X <- cbind(Yrs.Serv, SexCode)
+mlr(ES.H, X)
+```
+
+The residual vs. fits and normal plot look good, so this is a good model.
+
+`r hl()$hr()`
+
+Or is it?
+
+Let's do the following: what would the equation look like if we knew the person was female? (or male). Well:
+
+$$
+\begin{aligned}
+&\text{Female ES.H}    = \\
+&7.035 + 0.097 \text{Yrs.Serv} - 2.591 \cdot 0    = \\
+&7.035 + \mathbf{0.097} \text{Yrs.Serv}     \\
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+& \text{Male ES.H}   = \\
+& 7.035 + 0.097 \text{Yrs.Serv} - 2.591 \cdot 1   = \\
+& 4.444 + \mathbf{0.097} \text{Yrs.Serv}    \\
+\end{aligned}
+$$
+
+Notice that both equations have the same slope, so we have **parallel** lines. 
+
+**Note** such a model is also often called an *additive* model, similar to an ANOVA without interaction!
+
+What does this look like? Here it is:
+
+```{r}
+flplot(ES.H, Yrs.Serv, Sex, additive=TRUE)
+```
+
+Now a model with parallel line may or may not make sense for our data, but it does not have to. Except that no matter what, the way we used the categorical variable (simply code it and use it) we will **always** result in parallel lines!
+
+Is there a way to see whether this is ok here? Yes, but it is a bit tricky: what we need is a version of the residual vs fits plot that identifies the plotting symbols by Sex. If the model is good, this residual vs fits plot should also show no pattern. We can get it easy if we use the **dlr **routine instead of the mlr:
+
+```{r}
+dlr(ES.H, Yrs.Serv, Sex, additive=TRUE)
+```
+
+and as we can see there is a definite pattern in the colors.  
+
+So, how do we get away from parallel lines? This can be done by adding a variable Yrs.Serv\*SexCode. 
+
+```{r}
+predictors <- cbind(Yrs.Serv, SexCode, Yrs.Serv*SexCode)
+colnames(predictors)[3] <-  "Yrs.Serv*SexCode"
+mlr(ES.H, predictors)
+```
+
+and now: 
+
+$$
+\begin{aligned}
+&\text{Female ES.H} =\\ 
+&7.323 + 0.072 \text{Yrs.Serv} - 3.203 \cdot 0 +0.065 \cdot \text{Yrs.Serv*0}=\\ 
+&7.323 + 0.072 \text{Yrs.Serv}
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+&\text{Male ES.H} =\\ 
+&7.323 + 0.072 \text{Yrs.Serv} - 3.203 \cdot 1 + 0.065 \cdot \text{Yrs.Serv*1}=\\ 
+&4.120 + 0.138 \text{Yrs.Serv}
+\end{aligned}
+$$
+
+and so this fits *two separate lines*.
+
+```{r}
+flplot(ES.H, Yrs.Serv, Sex)
+```
+
+**Note** you can get the same two equations by splitting up the dataset into two parts, the score and years of the Females and the score and years of the Males, and then doing a simple regression for both: 
+
+```{r,eval=FALSE, fig.show='hide'}
+slr(ES.H[Sex=="Female"], Yrs.Serv[Sex=="Female"])
+```
+
+```{r,eval=FALSE, fig.show='hide'}
+slr(ES.H[Sex=="Male"], Yrs.Serv[Sex=="Male"])
+```
+
+Doing one multiple regression has some advantages, though. For example you get one R^2^ for the whole problem, not two for each part. Moreover, usually this R^2^ will be higher than either of the other two.
+
+So now we have two models:
+
+- parallel lines: ES.H  =  7.035 + 0.097 Yrs.Serv - 2.591 Sex 
+R^2^ = 83.9%
+
+- two separate lines: ES.H  =  7.323 + 0.072 Yrs.Serv - 3.203 SexCode + 0.065 Yrs.Serv*SexCode  
+
+R^2^=85.85%
+
+Clearly the second one has a higher R^2^, but then the first one is a special case of the second (nested models) and so the model with parallel lines will **never** have an R^2^ higher than the model with separate lines, and usually always has an R^2^ a bit lower. 
+
+Of course the parallel lines model has two terms while the other one has three, and the third one is more complicated, so we would prefer the parallel lines model, if possible.
+
+What we want to know is whether the model with two separate lines is **statistically significantly** better than the model with parallel lines. So we need a hypothesis test with:
+
+H~0~: the two separate lines model is NOT statistically significantly better than the parallel lines model.
+
+H~a~: the two separate lines model is statistically significantly better than the parallel lines model.
+
+Notice that the parallel lines model is a special case of the ttwo independent lines model, and so we can use the *nested.models.test* to decide which is better:
+
+```{r}
+parallel.lines <- dlr(ES.H, Yrs.Serv, Sex, 
+      return.model=TRUE)
+independent.lines <- dlr(ES.H, Yrs.Serv, Sex, additive=TRUE,
+      return.model=TRUE)
+nested.models.test(independent.lines, parallel.lines) 
+```
+
+gives a p-value of  0.1608 > 0.05, so the parallel lines model is just as good as the model with two separate lines.
+
+*Note* in this command the bigger model has to come first!
+
+####Prediction 
+
+We have the dlr.predict command to do prediction. Let's find 95% interval estimates for female employees with 0, 1, 2,..,10 years of service:
+```{r}
+dlr.predict(ES.H, Yrs.Serv, Sex, newx=0:10, 
+    newz=rep("Female", 11), additive=TRUE, interval="PI")
+```
+
+##Lines and Interaction
+
+Above we explained the problem of using categorical predictors in a regression model in terms of parallel lines vs. two independent lines. But in fact this another example of the issue of *interaction*, or more generally of a relationship between the predictors. Parallel lines are ok if the categorical and the continuous predictors are essentially independent. Often terms such as Yrs Serv\*SexCode are also called *interaction terms*.
+
+For your purposes in this class (and later when doing work such as this) simply remember to include product terms when you have categorical predictors. Then you can test if that term is really needed, and drop it if it is not.
+
+###Case Study: Sales of Shoes
+
+The number of shoes sold by year and type.
+```{r}
+head(shoesales)
+```
+Let's have a look at the data. Previously we used two graphs, we can also use a version of the scatterplot that identifies the dots by the categorical variable:
+```{r}
+attach(shoesales)
+splot(Sales, Year, Type, add.line=1)
+```
+We want to find a model for predicting Sales from Year and Type. Again Type is a categorical variable and so we need to code it. The most obvious thing to do would be to code:
+
+-  Mens= 0  
+-  Kids= 1  
+-  Ladies = 2  
+
+but that is dangerous. Unlike a categorical variable numbers always have an order and a size. So by coding in this way we are saying that Mens comes before Kids. Worse , we are saying that the "distance" from Mens to Kids is the same as the "distance" from Kids to Ladies! 
+
+Whether this matters or not dependes on the specific problem. There is however a way to include such a variable without introducing order or size:
+
+```{r}
+d1 <- rep(0, length(Type))
+d1[Type=="Kids"] <- 1
+d2 <- rep(0, length(Type))
+d2[Type=="Ladies"] <- 1
+```
+
+Notice that by knowing d1 and d2 we now exactly what the type is:
+
+- d1=0, d2=0 &rarr; Mens  
+- d1=1, d2=0 &rarr; Kids  
+- d1=0, d2=1 &rarr; Ladies  
+
+so we have not lost any information, but we have also not introduced any order or size!
+
+Now
+
+```{r}
+predictors <- cbind(Year, d1, d2)
+colnames(predictors) <- c("Year", "d1", "d2")
+mlr(Sales, predictors)
+```
+
+**Note** if there is one categorical predictor with just two values (binary data) we can use the dlr command. If the categorical variable has three or more values or if there is more than one categorical variable we can use the mlr command but we have to work a bit on getting the matrix of predictor variables right. 
+
+This is of course an additive model, again we should worry about interaction. But now we have two categorical predictors, so we need to add two product terms:
+
+```{r}
+predictors <- cbind(Year, d1, d2, Year*d1, Year*d2)
+colnames(predictors) <- c("Year", "d1", "d2", "Year*d1", "Year*d2")
+mlr(Sales, predictors)
+```
+
+And again we can test whether the product terms are needed:
+
+```{r}
+with.interaction <- mlr(Sales, predictors, return.model=TRUE)
+without.interaction <- mlr(Sales, predictors[,1:3], 
+                    return.model=TRUE)
+nested.models.test(with.interaction, without.interaction)  
+```
+
+and we find that here the interaction is needed (p= 0.000).
+
+
+```{r, echo=FALSE}
+detach(esh)
+detach(shoesales)
+```

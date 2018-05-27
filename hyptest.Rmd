@@ -1,0 +1,220 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Hypothesis Testing
+
+
+###Case Study: A New Treatment for Skin Cancer 
+
+Let's consider the following (artificial) example. A pharmaceutical company has developed a new treatment for a certain type of skin cancer. In order for the treatment to be approved by the Food and Drug Administration for use they have to show it is save (that is it has only acceptable side-effects) and it works (that is it is as better than the existing drugs). Let's say they have shown the safety, and now want to show the effectiveness.
+
+How can they do that?
+
+Obviously they need to carry out a clinical trial: find a number of people with this type of skin cancer, give them the new treatment and see what happens.
+
+Question: how many subjects do they need?
+
+Let's say that they decide to use 40 subjects. 
+
+What should they measure? In general there are many possibilities: time until cure, time until death, number of cancer cells, some feature of the blood, etc. Let's say this is a very agressive form of skin cancer which usually is deadly, so they will measure the time until death. They find that the subjects in the study survive  on average **517** days.
+
+Is this a long time? By itself this question cannot  be answered, we need something to compare it with. Let's say that using the current best treatment the survival time is known to have a mean of **485** days.  So this looks good for the new treatment: 517 days is better than 485 days.
+
+But the 517 days is the **sample mean** of this specific sample of 40 people, if we randomly choose another group of 40 subjects and give them the new treatment, their mean survival is NOT going to be 517 days again. It might be  lower but it also might be higher.
+
+Could it be as low as 485 days?
+
+Is the difference of 517-485 = 32 days due to the fact that the new treatment is better than the old one, or is it due to random fluctutation?
+
+`r hl()$vspace()`
+
+In very general terms what we have here is a question which has an answer of either **yes or no**. Yes, the new treatment is better than the old one or No, it is not. In Statistics, if we have such a yes-no question we usually answer it by doing a **hypothesis test**. 
+
+`r hl()$vspace()`
+
+Let's assume for the moment that the new treatment is NOT better than the old one, so the increase of 32 days was just due to random chance. Let's find the probability that if we then select a  new group of 40 subjects and use the new treatment, their mean survival time is again 517 days, or even longer?
+
+This probability is called the **p-value** of the the test. 
+
+If this probability is small (?) one of two events happened:
+
+- our experiment had an outcome that was very unlikely
+
+- our assumption that the new treatment is not better is false. The new treatment is better, and that is why the subjects lived longer.
+
+`r hl()$vspace()`
+
+Let's say the p-value is  small, and so the hypothesis test says that the new treatment is better than the old one. But maybe the p-value was small because in our specific group of 40 subjects several survived a long time, so their mean survival time was unusually high.
+
+Say that in reality (but unknown to us!)  the new treatment is NOT better than the old one, but because of random fluctutation the test decided wrong. This means we committed the **type I error**. 
+
+In a hypothesis test we decide before the test is done how small a p-value will lead us to reject the null hypothesis. This cut-off probability is usually denoted by $\alpha$ and is often chose as 5% (but not always!) 
+
+`r hl()$vspace()`
+
+Of course it might also work out the other way: let's say the p-value is NOT so small, and so the hypothesis test says that the new treatment is NOT better than the old one. But maybe the p-value was not so small because in our specific group of 40 subjects several died quickly for other reasons, so their mean survival time was unusually low. 
+Actually, the new treatment is better than the old one, but because of random fluctutation the test decided wrong. This means we committed the **type II error**. 
+
+So you see that this hypothesis test has a lot of moving parts: the parameter of the test (here the mean time of survival), the value for the sample (517), the value to which we should compare this (485), the acceptable type I error $\alpha$, type I and type II errors, their probabilitites, the p-value, the decision of the test (accept or reject). 
+
+##Parts of a Hypothesis Test
+
+1) Parameter of interest  
+2) Method of analysis  
+3) Assumptions of Method  
+4) Type I error probability $\alpha$  
+5) Null hypothesis $H_0$ (in plain language and in terms of a parameter, if appropriate)  
+6) Alternative hypothesis $H_a$  
+7) Find p value (using R)  
+8) Decision and Conclusion,**in plain language**.  
+
+The decision on whether or not to reject the null hypothesis is easy: 
+
+p < $\alpha$ &rarr; reject $H_0$
+
+p > $\alpha$ &rarr; fail to reject $H_0$
+
+**Example:** We flip a coin 100 times and get 58 heads. 
+
+Question: Is this a fair coin?
+
+1) Parameters of interest: a proportion (or percentage or probability)  
+2) Method of analysis: 1 proportion  
+3) Assumptions of Method: none   
+4) Type I error probability $\alpha=0.05$   
+5) Null hypothesis $H_0: \pi=0.5$ (coin is fair)  
+6) Alternative hypothesis $H_a: \pi \ne 0.5$ (coin is not fair)  
+7) p value = 0.133  
+8) 0.133 > 0.05, so we  fail to reject $H_0$, the coin could be fair. 
+
+##More on the p-value 
+
+The p-value is the probability of repeating the experiment and observing the same result or something even more unlikely (assuming the null hypothesis is true).
+
+**Example:** coin: p value is the probability to flip the coin again 100 times and get again 58 head or even more **if in truth the coin is fair**. 
+
+If the p-value is **small** (say <0.05) we should reject the null hypothesis! 
+
+`r hl()$vspace()`
+
+**Note:** actually because we are testing the alternative $\pi \ne 0.5$ the p value is the probability of number of heads $\ge 58$ or $\le 42$, but those are technical details which R will take care of for us.
+
+
+###App pvalue
+
+```{r eval=FALSE}
+run.app(pvalue)
+```
+
+This app illustrates the concept of the p value. The parameter of interest here is the mean $\mu$.
+
+As the app starts the page on the right is shows the chosen type I error probability $\alpha$, the null and the alternative hypothesis. There is no data yet. 
+
+This illustrates one important fact about hypothesis testing: $\alpha$, H~0~ and H~a~ do NOT depend on the data, they come from the problem/experiment we are working on. 
+
+Next move the slider to 1. Now on the Single Experiment tab you get one simulated dataset (from a normal distribution with mean $\mu$ and standard deviation $\sigma$), the p-value of the corresponding test and the decision on the test (reject/ fail to reject H~0~). You can now run the movie and see a sequence of simulated datasets. 
+
+Switch to the Many Experiment tab 
+
+**Case I: $\mu$=10, H~0~ is true **
+This shows the histogram of 1000 hypothesis tests just like the one on the Single Experiment tab. In each test if $p<\alpha$ (drawn in red) we reject H~0~, otherwise we fail to reject H~0~. The app shows the percentage of tests with $p<\alpha$, which should be close to $\alpha$!
+
+Changing the sample size n or the population standard deviation $\sigma$ does not change any of this. 
+
+Changing $\alpha$ changes the percentage of rejected tests so that it always matches $\alpha$.
+
+**Case I: $\mu \ne 10$, H~0~ is false**
+
+Move slider to $\mu=11.0$. Now the number of tests with $p<\alpha$ is much higher (63%), which is good because this means we would correctly reject this false H~0~ 63% of the time. Move the slider to $\mu=12.0$ and now almost all the test have $p<\alpha$.
+
+Move slider to $\mu$=11.0 and see that 
+
+- larger sample size n (=100) &rarr; reject more tests (91.3% vs 63%) 
+
+- increase population standard deviation $\sigma$ (=9) &rarr; reject fewer tests (12.4% vs 63%) 
+
+d) increase confidence level $\alpha =0.1$ &rarr; reject more tests (74.4% vs 63%) 
+
+##What you can conclude from the outcome of a hypothesis test
+
+After carrying out a hypothesis test, what can you conclude? There are always the following possibilities:
+
+- If we rejected the null hypothesis:  
+---  H~0~ is in fact false  
+and we made the correct decision  
+---   H~0~ is in fact true and we made the wrong decision, so we committed the type I error  (but we know the probability of doing so - $\alpha$)
+
+- If we failed to reject the null hypothesis:  
+---  H~0~ is actually true  
+and so we made the correct decision  
+---   H~0~ is in fact false, so we made the wrong decision, we committed the type II error  
+--- H~0~ is in fact false, so we made the wrong decision, specifically because our sample size was to small!
+
+###"fail to reject H~0~" vs "accept H~0~"
+
+If we carry out a hypothesis test and at the end find p$\alpha$, we say that we** fail to reject **the null hypothesis. Why do we not just say that we **accept **the null hypothesis? Let's illustrate the difference with an example:
+
+**Example** say you pick a coin out of your pocket. It is a perfectly ordinary coin, but for some reason you wish to test whether the probability of heads is 0.4. You flip the coin 25 times and find 13 heads (a quite realistic outcome). Now we have
+
+```{r}
+one.sample.prop(13, 25, pi.null=0.4)
+```
+
+1) Parameter of interest: 1 Proportion $\pi$  
+2) Method of analysis: test for binomial $\pi$  
+3) Assumptions of Method: none  
+4) Type I error probability $\alpha = 0.05$   
+5) Null hypothesis H~0~: $\pi=0.4$   
+6) Alternative hypothesis H~a~: $\pi\ ne 0.4$   
+7) p-value = 0.2273  
+8) $p > \alpha$, we fail to reject the null hypothesis  
+
+so, should we now conclude that $\pi=0.4$? Remember, this is a completely normal coin, almost certainly a fair coin with (just about) $\pi=0.5$, not 0.4 So the null hypothesis is pretty much certain to be wrong, and us "accepting" it would be wrong! 
+
+The problem is of course that flipping the coin just 25 times was not enough. Say we had flipped the coin 100 times and got 52 heads (for the same proportion 13/25 = 52/100), but now p-value=0.0184 < $\alpha$ and we would reject H~0~. So 
+
+**We never accept a null hypothesis, we can only fail to reject a null hypothesis**
+
+`r hl()$vspace()`
+ 
+###Power of a Test 
+
+ One of the most important considerations in a hypothesis test is its **power**. It is defined as the probability to **CORRECTLY** reject a **FALSE** null hypothesis.
+ 
+###App power
+
+```{r eval=FALSE}
+run.app(power)
+```
+
+The app generates n observations from a normal distribution with mean $\mu$ and standard deviation $\sigma$. Then it does the test 
+
+H~0~: $\mu$=10.0 vs H~a~: $\mu$>10.0
+
+To start $\mu$=11.0, so H~0~ is false and should be rejected. Run the Movie and see what happens if we do this 100 times. About half the time we make the right decision, and so the power of this test is 50%. 
+Select the Show Power Curve button, and you get the theoretical power curve with the actual power, closely matching the simulation result.
+
+Now you can change the situation by changing the true $\mu$ to 12.0, the standard deviation from 3 to 5, the sample size from 25 to 50 and the type I error probability $\alpha$ from 5% to 10%. Observe how each of these changes affects the power. 
+
+The power of a test is (among other things) a tool that helps us when we are planning an experiment. It can help us understand whether a certain experiment is likely to be successful (statistically!) and it can help us decide how large the experiment needs to be (the sample size) 
+ 

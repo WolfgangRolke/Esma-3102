@@ -1,0 +1,404 @@
+---
+output:
+  pdf_document:
+    fig_caption: no
+  html_document: default
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+require(knitr)
+require(ggplot2)
+require(grid)
+```
+`r hl()$basefontsize()`
+
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+
+#Exercise Problems 1 
+
+In this page we will practise some of the things we have learned before. You should try to solve each problem on your own before looking at the solutions. 
+
+###Problem 1
+
+Some years ago an insurance company did a study of their policies and found that 30% of them where for cars. They randomly select 532 of their current policies and find that 131 of them are car insurances. 
+
+a.  Test at the 1% level whether the percentage of car insurance policies is now smaller than 30%
+
+b.  If the true percentage of car insurance policies is 25%, what was the power of this test?
+
+c.  If the true percentage of car insurance policies is 25%, what sample size is needed to have a  power of 95%    
+
+###Problem 2
+
+An insurance company is interested in the amount of money they pay on average on insurance claims. They randomly select 42 policies and find the payouts:
+
+``` {r, echo=FALSE}
+p1x <-
+c(1400, 32400, 27400, 22400, 3500, 8300, 33600, 17000, 9600, 
+20500, 4900, 9900, 33100, 9600, 23200, 22400, 3600, 12400, 14900, 
+29100, 4500, 13500, 12100, 12700, 16600, 17000, 21700, 29200, 
+16200, 4000, 16500, 17000, 41000, 19000, 23900, 37300, 32100, 
+5200, 19700, 21600, 400, 18700)
+```
+1400 32400 27400 22400 3500 8300 33600 17000 9600 20500
+4900 9900 33100 9600 23200 22400 3600 12400 14900 29100
+4500 13500 12100 12700 16600 17000 21700 29200 16200 4000
+16500 17000 41000 19000 23900 37300 32100 5200 19700 21600
+400 18700 
+
+Find a 95% confidence interval for the true mean amount of payouts.
+  
+###Problem 3
+
+In a certain store the average sales is $48. The store ran an add in a newspaper, and they want to see whether the add has worked. They randomly select some recent sales and find
+
+52.35 48.34 72.55 71.55 44.68 56.64 52.43 73.98 60.55 60.29   
+  42.33 46.84 59.45 63.04 59.04 33.28 50.67 62.3 54.13 68.65   
+  34.21 58.72 60.99 68.24 52.45 56.88 57.81 56.29 79.69 46.88   
+  48.73 53.77 65.79 73.71 44.55 58.53 51.48 52.95 46.26 50.98   
+
+``` {r, echo=FALSE}
+p2x <-
+c(52.35, 48.34, 72.55, 71.55, 44.68, 56.64, 52.43, 73.98, 60.55, 
+60.29, 42.33, 46.84, 59.45, 63.04, 59.04, 33.28, 50.67, 62.3, 
+54.13, 68.65, 34.21, 58.72, 60.99, 68.24, 52.45, 56.88, 57.81, 
+56.29, 79.69, 46.88, 48.73, 53.77, 65.79, 73.71, 44.55, 58.53, 
+51.48, 52.95, 46.26, 50.98)
+```
+
+a.  Test at the 5% level whether the add was a success
+
+b.  if the add raised the mean sales to $50, what is the power of the test?
+
+c.  if the add raised the mean sales to $50, what sample size is needed to have a power of 99%?
+
+###Problem 4
+
+According to a web site of the Red Cross 57% of Hispanics have blood type O, 31% have type A, 10% type B and 2% type AB. A sample of 250 people resulted in the following blood types:
+
+``` {r, echo=FALSE}
+x <- c(147,71,28,4)
+names(x)<-c("O","A","B","AB")
+knitr::kable( rbind(x) , row.names = FALSE)
+```
+
+Test at the 10% level whether the blood types suggest that these people were hispanics
+
+###Problem 5
+
+The data set studentsurvey has the replies of students to some questionnaire.
+
+a.  find a 90% confidence interval for the mean score
+
+b.  test at the 10% level whether there are equally many male and female students.
+
+c.  test at the 5% level whether the mean GPA is less than 2.5
+
+d.  test at the 5% level whether the poplation has equally many Freshman,    Junior,    Senior and Sophomore
+
+e.  find a 90% confidence interval for the mean age of the students. 
+
+###Problem 6
+
+In class we talked about Bernoulli trials, that is experiments which have only two possible outcomes. Often one is interested in how often a certain outcome happens when the experiment is carried out a number of times. This is then called a Binomial distribution, and probabilities can be found with the R command dbinom(k, n, p), where n is the number of trials, k how often the outcome happens and p its probability. For example, if we want to know the probability of 2 sixes in 10 rolls of a fair die, it is
+
+```{r}
+ dbinom(2,10,1/6) 
+```
+
+a.  if a group consists of 100 men and 90 women and if three people are chosen at random, what is the probability all of them are men?
+
+b.  if a fair coin is flipped 10 time, what is the probability of at most 3 heads?
+
+c.  if the probability of having an accident on any one mile of road is 0.001, what is the probability of having at least one accident when driving 10000 miles in one year? 
+
+d.  if a fair coin is flipped 100 times, what is the probability of getting between 40 and 60 heads (include 40 and 60) ? (Compare that our discussion of the coin app)
+
+###Problem 7
+
+The mean score in the final exam of a Calculus course over many years was 72.3. The University wants to decide whether or not to change the text book, and so they are planning to teach several sections of the course with a new text book. Then they will test H~0~: $\mu=72.3$ vs H~a~: $\mu>72.3$ at the 5% level. If it is true that with this new text book the mean score will go up to 75.5 points, how many students do they need to have so that the hypothesis test has a power of 80%? (assume the standard deviation is 15.0) 
+
+###Problem 8
+
+At a certain moment in time the national unemployment rate was 6.9%. In one city among 250 randomly selected people 30 said they were unemployed. Test at the 10% level to check whether in this city the unemplyoment rate differs from that nationwide. 
+
+`r hl()$hr()`
+`r hl()$hr()`
+
+##Solutions
+
+###Problem 1
+
+Some years ago an insurance company did a study of their policies and found that 30% of them where for cars. They randomly select 532 of their current policies and find that 131 of them are car insurances.
+
+**Variables: 1 Proportion**
+
+**Problem: Hypothesis test**
+
+a. Test at the 1% level whether the percentage of car insurance policies is now smaller than 30%
+
+```{r}
+one.sample.prop( x = 131, n =  533, pi.null = 0.3, alternative="less")
+```
+
+1) Parameter: proportion $\pi$    
+  2) Method: exact binomial   
+  3) Assumptions: none    
+  Assumption is ok    
+  4) $\alpha$ = 0.01    
+  5) H~0~: $\pi$ = 0.3    
+  6) H~a~: $\pi$ &lt; 0.3    
+  7) p-value = 0.0036   
+  8) p-value = 0.0036 < $\alpha$, so we reject the null hypothesis, the true percentage of car insurance claims is statistically significantly smaller than 30% 
+  
+b. If the true percentage of car insurance policies is 25%, what was the power of this test?
+
+```{r}
+prop.ps( n = 533, phat = 0.25, pi.null = 0.3, alpha = 0.01, alternative = "less")
+```
+
+c. If the true percentage of car insurance policies is 25%, what sample size is needed to have a power of 95%    
+
+```{r}
+prop.ps( power = 95, phat = 0.25, pi.null = 0.3, alpha = 0.01, alternative = "less")
+```
+
+###Problem 2 
+
+Find a 95% confidence interval for the true mean amount of payouts.
+
+**Variables: 1 mean**  
+**Problem: confidence interval**
+
+highlight the data, then in R
+
+```{r, eval=FALSE}
+one.sample.t(x) 
+```
+
+Assumptions are ok (checked boxplot and normal plot)
+```{r, echo=FALSE}
+one.sample.t(p1x)
+```
+
+###Problem 3 
+
+**Variables: 1 mean**  
+**Problem: hypothesis test**  
+
+a.  Test at the 5% level whether the add was a success
+highlight the data, then in R
+
+Assumptions are ok (checked boxplot and normal plot)
+
+1)  Parameter of interest: population mean    
+2) Method of analysis: one sample t    
+3) Assumptions of Method: normal data or large sample    
+4) Type I error probability $\alpha$ = 0.05    
+5) H~0~: $\mu$ = 48   
+6) H~a~: $\mu$ &gt; 48   
+7) p value = 0.000
+```{r, eval=FALSE}
+ one.sample.t( x, mu.null = 48, alternative = "greater")
+```
+```{r, echo=FALSE}
+ one.sample.t( p2x, mu.null = 48, alternative = "greater")
+```
+
+8) p&lt;$\alpha$, we fail to reject the null hypothesis, the add was a success
+
+b. if the add raised the mean sales to $50, what is the power of the test?
+```{r, echo=FALSE}
+ t.ps( n = 40, diff = 50-48, sigma = sd(p2x), alternative = "greater")
+```
+```{r, eval=FALSE}
+ t.ps( n = 40, diff = 50-48, sigma = sd(x), alternative = "greater")
+```
+
+c. if the add raised the mean sales to $50, what sample size is needed to have a  power of 99%?
+```{r, eval=FALSE}
+ t.ps( power = 99, diff = 50-48, sigma = sd(x), alternative = "greater")
+```
+```{r, echo=FALSE}
+ t.ps( power = 99, diff = 50-48, sigma = sd(p2x), alternative = "greater")
+```
+
+###Problem 4
+
+**Variable: 1 categorical**  
+**Problem: hypothesis test** 
+
+```{r}
+chi.gof.test(c(147,71,28,4), c(57,31,10,2))
+```
+
+so we fail to reject the proportions, these people might well have been hispanics
+
+###Problem 5
+
+The data set studentsurvey has the replies of students to some questionnaire.
+
+```{r}
+attach(studentsurvey)
+```
+
+a.  find a 90% confidence interval for the mean score
+
+**Variable: 1 mean **  
+**Problem: confidence interval**
+
+Assumptions are ok (checked boxplot and normal plot)<em> </em>
+
+```{r}
+one.sample.t(Score, conf.level = 90)
+```
+
+b.  test at the 10% level whether there are equally many male and female students.
+
+**Variables: 1 Proportion**  
+**Problem: Hypothesis test **
+
+```{r}
+table(Gender)
+```
+
+1) Parameter: proportion $\pi$    
+  2) Method: exact binomial   
+  3) Assumptions: none    
+  Assumption is ok    
+  4) $\alpha$ = 0.1    
+  5) H~0~: $\pi$ = 0.5   
+  6) H~a~: $\pi \ne 0.5$   
+  7) p-value = 0.0994   
+``` {r}
+one.sample.prop( x = 111 , n = 111+138, pi.null = 0.5)
+```
+  
+  8) p-value = 0.0994 <  $\alpha$, we reject the null hypothesis    
+  9) it appears there are slightly fewer female students (but this was a very close call, we would have failed to reject the null at the 5% level!) 
+  
+c. test at the 5% level whether the mean GPA is less than 2
+
+**Variables: 1 mean **   
+**Problem: hypothesis test **
+
+Assumptions are ok (checked boxplot and normal plot)<em> </em>
+1) Parameter of interest: population mean    
+  2) Method of analysis: one sample t    
+  3) Assumptions of Method: normal data or large sample    
+  4) Type I error probability $\alpha$ = 0.05    
+  5) H~0~: $\mu$ = 2.5   
+  6) H~a~: $\mu$ < 2.5   
+  7) p value = 0.000
+```{r}
+one.sample.t( GPA, mu.null = 2.5, alternative="less")
+```
+
+ 8) p < $\alpha$, we fail to reject the null hypothesis   
+  9) the population mean GPA is almost certainly less than 2.5 
+
+d. test at the 5% level whether the poplation has equally many Freshman, Junior, Senior and Sophomore
+
+**Variable: 1 categorical**  
+**Problem: hypothesis test **
+```{r}
+chi.gof.test(table(Year), c(1,1,1,1)/4)
+```
+
+p value = 0.0544 > 0.05, so we fail to reject the proportions, but by just a bit.
+
+e. find a 90% confidence interval for the mean age of the students. 
+The boxplot of Age shows a severe outlier. Further investigation shows this to be observation #220. We should remove this observation from the calculation. 
+
+```{r}
+bplot(Age)
+```
+```{r}
+which(Age==max(Age))
+```
+```{r}
+bplot(Age[-220])
+```
+```{r}
+one.sample.t(Age[-220], conf.level = 90) 
+```
+ 
+###Problem 6
+
+In class we talked about Bernoulli trials, that is experiments which have only two possible outcomes. Often one is interested in how often a certain outcome happens when the experiment is carried out a number of times. This is then called a Binomial distribution, and probabilities can be found with the R command dbinom(k, n, p) where n is the number of trials, k how often the outcome happens and p its probability. For example, if we want to know the probability of 2 sixes in 10 rolls of a fair die, it is
+
+```{r}
+dbinom(2, 10, 1/6) 
+```
+
+a. if a group consists of 100 men and 90 women and if three people are chosen at random, what is the probability all of them are men?
+
+```{r}
+dbinom(3, 3, 100/190) 
+```
+
+b. if a fair coin is flipped 10 time, what is the probability of at most 3 heads?
+
+at most 3 means either 0 or 1 or 2 or 3, so 
+
+```{r}
+dbinom(0, 10, 1/2) + dbinom(1, 10, 1/2) + dbinom(2, 10, 1/2) + dbinom(3, 10, 1/2) 
+```
+
+or quicker:
+
+```{r}
+sum(dbinom(0:3, 10, 1/2))
+```
+
+c. if the probability of having an accident on any one mile of road is 0.001, what is the probability of having at least one accident when driving 10000 miles in one year? 
+
+Prob(at least one accident) = 1-Prob(0 accidents)
+
+```{r}
+1-dbinom(0, 10000, 0.0001) 
+```
+
+d. if a fair coin is flipped 100 times, what is the probability of getting between 40 and 60 heads (include 40 and 60) ? (Compare that our discussion of the coin app)
+
+```{r}
+sum(dbinom(40:60, 100, 1/2)) 
+```
+
+###Problem 7
+
+The mean score in the final exam of a Calculus course over many years was 72.3. The University wants to decide whether or not to change the text book, and so they are planning to teach several sections of the course with a new text book. Then they will test H~0~: $\mu$=72.3 vs H~a~: $\mu$>72.3 at the 5% level. If it is true that with this new text book the mean score will go up to 75.5 points, how many students do they need to have so that the hypothesis test has a power of 80%? (assume the standard deviation is 15.0) 
+
+```{r}
+t.ps(diff=75.5-72.3, sigma=15.0, power=80, alternative="greater")
+```
+
+###Problem 8
+
+At a certain moment in time the national unemployment rate was 6.9%. In one city among 250 randomly selected people 30 said they were unemployed. Test at the 10% level to check whether in this city the unemplyoment rate differs from that nationwide. 
+
+1) Parameter: proportion $\pi$    
+2) Method: exact binomial   
+3) Assumptions: none    
+Assumption is ok    
+4) $\alpha$ = 0.1    
+5) H~0~: $\pi$ = 0.069   
+6) H~a~: $\pi \ne 0.069$   
+7) p-value=0.00223
+```{r}
+one.sample.prop(x=30, n=250, pi.null=0.069)
+```
+
+8) p-value = 0.00223 < $\alpha$, so we reject the null hypothesis   
+9) the true unemployment rate in this city is not 6.9%
+
+
+```{r, echo=FALSE}
+detach(studentsurvey)
+```

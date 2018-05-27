@@ -1,0 +1,151 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Graphs
+
+Graphs play a major role in Statistics. Here are some of the commonly used graphs:
+
+##Boxplot
+
+This is a graph for quantitative data. It shows the numbers from the 5-number summary:
+
+Minimum | Q<sub>1</sub> | Median | Q<sub>3</sub> | Maximum
+
+plus some rules for identifying observations that are shown as stars. The boxplot is done with the command **bplot**. The first argument has to be the quantitative variable and the second one (if needed) the categorical one.
+
+```{r, echo=FALSE}
+x <- rnorm(100, 50, 10)
+bplot(x)
+```
+
+```{r, echo=FALSE}
+Example1 <- rnorm(100, 100, 20)
+Example2 <- rt(100, 1)*10 + 100
+y <- rep(c("A", "B"), 50)
+x <- Example1
+x[y=="B"] <- x[y=="B"]+10
+Example3 <- data.frame(x=x, y=y)
+```
+
+Here are several examples: 
+
+```{r}
+plt1 <- bplot(Example1, return.graph = TRUE)
+plt2 <- bplot(Example2, return.graph = TRUE)
+plt3 <- bplot(x, y, label_x="Example3", label_y="", 
+      return.graph = TRUE)
+multiple.graphs(plt1, plt2, plt3)
+```
+
+note the use of the *multiple.graphs* command to combine several graphs into one. We also need the the additional argument return.graph = TRUE.
+
+We use the boxplot mostly for these:
+
+###Are there any unusually large or small observations?
+
+These appear as stars in the boxplot, compare the graph in the upper right corner with the one in the upper left corner.
+
+Connected to this is the following question:
+
+###Do the observations come from a normal distribution?
+
+Most of the methods discussed in this course require that the observations of a variable come from a normal distribution. Problems with this assumption can often be seen in the boxplot. If there are stars (far away) from the box the normal assumption is wrong. 
+
+###We have observations from several groups, how do they compare?
+
+check out graph in lower left corner
+
+##Scatterplot
+
+This graph is for two quantitative variables. It is just a Cartesion coordinate system with the observations plotted as points. We have the command **splot(y, x)** to do the graph. Here y is the variable that goes on the y axis.
+
+```{r,echo=FALSE}
+x <- runif(50, 0, 10)
+y <- x + rnorm(50)
+splot(y, x)
+```
+
+##Normal Plot
+
+This is a graph specifically designed to check whether the observations follow a normal distribution. If this is true the dots should (roughly) be on a line:
+
+
+```{r, echo=FALSE}
+nplot(rnorm(100, 50, 10))
+```
+
+we have the command **nplot** to do the graph.
+
+####Normal Assumption is correct:
+
+```{r, echo=FALSE}
+plt1 <- nplot(rnorm(50), return.graph = TRUE)
+plt2 <- nplot(rnorm(50), return.graph = TRUE)
+plt3 <- nplot(rnorm(50), return.graph = TRUE)
+plt4 <- nplot(rnorm(50), return.graph = TRUE)
+multiple.graphs(plt1, plt2, plt3, plt4)
+```
+
+
+####Normal Assumption is wrong:
+
+```{r, echo=FALSE}
+plt1 <- nplot(rt(50, 1), return.graph = TRUE)
+plt2 <- nplot(rchisq(50, 1), return.graph = TRUE)
+plt3 <- nplot(runif(50), return.graph = TRUE)
+plt4 <- nplot(rchisq(50, 2), return.graph = TRUE)
+multiple.graphs(plt1, plt2, plt3, plt4)
+```
+
+##Case Study: Euro Coins
+
+The data were collected by Herman Callaert at Hasselt University in Belgium. The euro coins were "borrowed" at a local bank. Two assistants, Sofie Bogaerts and Saskia Litiere weighted the coins one by one, in laboratory conditions on a weighing scale of the type Sartorius BP 310s.
+
+Here is the boxplot and the normal plot of the weights:
+
+```{r}
+attach(euros)
+head(euros)
+bplot(Weight)
+nplot(Weight)
+```
+
+It appears that the weights do not come from a normal distribution.
+
+##Marginal Plot
+
+There is a nice graph that combines a scatterplot and boxplots called the marginal plot. We can do it with the **mplot(y, x)** command:
+
+```{r, echo=FALSE}
+x <- runif(50, 0, 10)
+y <- x + rnorm(50)
+```
+```{r}
+mplot(y, x)
+```
+
+
+```{r, echo=FALSE}
+detach(euros)
+```
+

@@ -1,0 +1,183 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Nonlinear Regression Models
+
+###Case Study: Fabric Wear
+
+Results from an experiment designed to determine how much the speed of a washing machine effects the wear on a new fabric. The machine was run at 5 different speeds (measured in rpm) and with six pieces of fabric each.
+
+```{r}
+head(fabricwear)
+```
+
+The scatterplot of wear by speed shows a strong but non-linear relationship:
+
+```{r}
+attach(fabricwear)
+splot(Wear, Speed, add.line=1)
+```
+
+How strong is a difficult question, because Pearson's correlation coefficient won't work here. If we tried slr we would see in the residual vs fits plot that there is a problem with the assumption of a linear model:
+
+```{r}
+slr(Wear, Speed)
+```
+
+So the question is: how do fit models other than straight lines?
+
+There are two basic things we can try. The first is something we have already done, namely the **log transformation**
+
+```{r, warning=FALSE}
+splot(Wear, log(Speed), add.line=1)
+splot(log(Wear), log(Speed), add.line=1)
+splot(log(Wear), Speed, add.line=1)
+```
+
+unfortunately non of these looks very good
+
+Some of these have names:
+
+- log(y) vs. x is called an **exponential model**
+
+- log(y) vs. log(x) is called a **power model**
+
+The other solution to our problem is to fit a **Polynomial Model**:
+
+**Linear** $y=\beta_0+\beta_1 x$
+
+**Quadratic** $y=\beta_0+\beta_1 x+\beta_2 x^2$
+
+**Cubic** $y=\beta_0+\beta_1 x+\beta_2 x^2+\beta_3 x^3$
+
+and so on
+
+How do we fit such a model? We can simply use the same routine  with the extra argument *polydeg=...*. For example for the quadratic model we do
+
+```{r}
+slr(Wear, Speed, polydeg=2)
+```
+
+What does such a curve look like? To draw the fitted line plot, that is the scatterplot with the fitted curve, just use
+
+```{r}
+flplot(Wear, Speed, polydeg=2)
+```
+
+This routine also does the log transform models:
+
+```{r}
+flplot(Wear, Speed, logy=TRUE)  
+```
+
+Similarly use flplot(Wear, Speed, logx=TRUE) or flplot(Wear, Speed, logx=TRUE, logy=TRUE) for the other log transforms
+
+**Note**
+There are two big differences in the way transformations and polynomial models work: 
+
+- if we do a transformation we **replace** an old variable with a new one, if we do a polynomial model we **add** a new predictor to the model.
+
+- we might transform the response, but a polynomial model is always a polynomial in the predictor, never the response. 
+
+**Mathematical Features of these Models**
+
+What "shapes" can we fit with these models?
+
+- Transformations might work if the relationship between x and y is **monotone**, that is in the scatterplot the dots either go up or down but never turn around.
+
+- Polynomial models usually do turn around, quadratic models once, cubic models twice and so on. Sometimes this is not apparent because we only see the graph before the turn-around happens. 
+<hr>
+
+###Prediction
+
+Again we can use the slr.predict command to do prediction, but there are some things we need to be careful with:
+
+**Transformations**
+
+if we use a log transformation on the predictor we have to use the log transformation also on the newx: 
+
+```{r}
+slr.predict(Wear, log(Speed), newx=log(150))
+```
+
+if we use a log transformation on the response we are getting an estimate of the log of the response. To get back to the original we can do this:
+
+```{r}
+slr(log(Wear), Speed) 
+```
+
+so we have the equation
+
+$$
+\log(\text{Wear})  = 2.335 + 0.008 \text{Speed} 
+$$
+
+and now we can get an estimate with 
+
+```{r}
+exp(2.335 + 0.008*150)
+```
+
+All of this works ONLY for point estimation, interval estimation is much harder and needs to be done by an expert!
+
+In contrast, prediction using polynomials works perfectly fine as is:
+
+```{r}
+slr.predict(Wear, Speed, newx=150, polydeg=2, 
+            interval="PI", conf.level= 90)
+```
+
+If you are not sure that you got the right answer, here is a quick sanity check: draw the scatterplot and do a visual guess of y.
+
+**Example**: say we want to use the power model and predict the Wear for Speed=150:
+
+```{r}
+slr.predict(log(Wear), log(Speed), newx=150)
+```
+
+Notice that I should have written newx=log(150).
+
+Now if I draw the fitted line plot:
+
+```{r}
+splot(Wear, Speed)
+```
+
+it is clear that if x=150 y should be be around 32 or so, not 165!
+
+So I better try again:
+
+```{r}
+slr.predict(log(Wear), log(Speed), newx=log(150))
+```
+
+and that's about right because
+
+```{r}
+log(32)
+```
+
+
+```{r, echo=FALSE}
+detach(fabricwear)
+```

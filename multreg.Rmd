@@ -1,0 +1,284 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#More than One Quantitative Predictor
+
+###Case Study: House Prices
+Prices of residencies located 30 miles south of a large metropolitan area with several possible predictor variables. Notice the 1.7 baths!
+
+```{r}
+attach(houseprice)
+houseprice
+```
+
+Let's go through the list of predictors one by one:
+
+```{r}
+splot(Price, Sqfeet, add.line = 1)
+cor(Price, Sqfeet)
+```  
+
+strong positive relationship (r=0.915), could be linear
+
+```{r}
+bplot(Price, Floors)
+cor(Price, Floors)
+```  
+
+weak if any positive relationship (r=0.291)  
+
+**Note** we used the boxplot here although Floors is a quantitative predictor. If the predictor has only a few different values (2 here!) this is often a better choice.
+
+```{r}
+bplot(Price, Bedrooms)
+cor(Price, Bedrooms)
+```  
+  
+strong positive relationship (r=0.605), could be linear
+
+```{r}
+bplot(Price, Baths)
+cor(Price, Baths)
+```  
+
+strong positive relationship (r=0.652), could be linear
+
+**Note** there is so far no mention of regression, residual vs. fits plot or normal plot. Making decisions about possible transformations and/or polynomial models early solely based on scatterplots and/or boxplots is usually a good idea.
+
+Now to run the regression we have the routine *mlr*. As always the first argument is the response variable but now the second argument are all the predictors as a matrix: 
+
+```{r, warning=FALSE}
+mlr(Price, houseprice[, -1]) 
+```
+
+For the assumptions there is nothing new, as before we need to check the residual vs. fits plot and the normal plot of residuals.  
+
+ This appears to be a good model and the assumptions of normally distributed residuals with equal variance appears to be o.k.
+ 
+Except,
+
+**Notice** that there is something very strange about this model!
+ 
+ 
+```{r}
+round(cor(houseprice[,-1]),3)
+```
+
+The highest correlation between predictors is r=0.743 (Floors-Baths)
+
+##Best Subset Regression  
+
+We have previously talked about the fact that we want our models to be as simple as possible. Often that means a model with as few predictors as possible. So the question becomes:
+
+**Can we eliminate any of our predictors without making the model (stat. signif.) worse?**
+
+There are several things one can think of:
+
+**Choose based on R^2^**
+
+but we already know this will always lead to the model with all predictors, for the same reason that a cubic model always has an R^2^ at least as high as the quadratic model. 
+
+Note:  
+
+Price by Sqfeet, Floors and Bedrooms: R^2^=80.1%  
+Price by Floors, Bedrooms and Baths: R^2^=68.4%  
+Price by Sqfeet, Bedrooms and Baths: R^2^=83.5%  
+Price by Sqfeet, Floors, Bedrooms and Baths: R^2^=88.2%  
+so model with all 4 has a higher R^2^ than any of the models with just 3, **but this will always be so, even if one of the predictors is completely useless**.
+
+**Choose based on Hypothesis Tests**
+
+```{r, warning=FALSE}
+mlr(Price, houseprice[, -1], show.tests = TRUE) 
+```
+
+so p_value of Bedrooms > 0.05, so eliminate Bedrooms.
+
+This sounds like a good idea AND IT IS WIDELY USED IN REAL LIFE, but it turns out to be a `r hl()$fontcolor("bad one")` ! The reason why is bit hard to explain, though.
+
+**Use nested models test**
+
+```{r}
+all.preds <- mlr(Price, houseprice[, -1], return.model = TRUE)
+without.bedrooms <- mlr(Price, houseprice[, -c(1, 4)], 
+                        return.model = TRUE)
+nested.models.test(all.preds, without.bedrooms)
+```
+
+Again, this sounds like a good idea AND AGAIN IT IS WIDELY USED IN REAL LIFE, but it turns out to be a `r hl()$fontcolor("dangerous one")`! To start, if we have several predictors we might want to eliminate, we immediately face the issue of *simultaneous inference*. 
+
+There are several methods in wide use that are essentially based on this idea, such as *forward selection*, *backward selection* and *stepwise regression*. These are sometimes unavoidable but need to be done with great care!
+
+`r hl()$hr()`
+
+What we need is new idea:
+
+**Best Subset Regression and Mallow's C~p~**
+
+We will find ALL possible models and calculate Mallow's C~p~ statistic for each. The model with the lowest C~p~ is best. 
+
+```{r}
+mallows(Price, houseprice[, -1])
+```
+
+so the best model uses Sqfeet, Floors and Baths.
+
+To find the model we rerun mlr, now without Bedrooms:
+
+```{r,warning=FALSE}
+mlr(Price, houseprice[, -c(1,4)])
+```
+
+Note that the model with all four predictors has C~p~=5.0. But C~p~ is a **statistic**, its exact value depends on the sample. So is the model with Sqfeet, Floors and Baths **statistically significantly** better than the model with all four predictors? We would need a hypothesis test to answer this question but this is not part of our course. 
+
+For more on Mallow's C~p~ see page 603 of the textbook.
+
+####Prediction
+
+Prediction works just as it did for simple regression. We have the command **mlr.predict**. Say we want to find a 90% interval estimate for a house that has 2000 sqfeet, one floor and two baths. Then
+
+```{r}
+mlr.predict(Price, houseprice[ ,-c(1, 4)],
+    newx=c(2000, 1, 2), interval="PI", conf.level=90)
+```
+
+and so a 90% predicition interval is (\$98,070, \$147,890)
+
+If we want to do prediction for a number of cases newx has to be a matrix:
+
+```{r}
+newx <- cbind(c(2000,2100,2200), rep(1,3), rep(2,3))
+newx
+mlr.predict(Price, houseprice[ ,-c(1, 4)], 
+            newx=newx, interval="PI")
+```
+
+Finally, not including the newx does the prediction of the dataset:
+
+```{r}
+head(mlr.predict(Price, houseprice[ ,-c(1, 4)],
+                 interval="PI"))
+```
+
+###Case study: Air Pollution and Mortality
+
+The dependent variable for analysis is age adjusted mortality (called "Mortality"). The data include variables measuring demographic characteristics of the cities, variables measuring climate characteristics, and variables recording the pollution potential of three different air pollutants.
+
+```{r}
+attach(airpollution)
+head(airpollution)
+```
+
+next we want to look at the scatterplots and the correlations. There are 15 predictors, so there are 15 graphs and correlations. 
+
+```{r, echo=FALSE}
+for(i in 2:16) {
+  mplot(Mortality, airpollution[, i], add.line=1, 
+      varNames = c(colnames(airpollution)[i], "Mortality"))
+  if(i %in% c(10, 13, 14, 16)) 
+    cat("Outliers! ")
+  else 
+    print(cor(Mortality, airpollution[, i]), 3)
+} 
+```
+
+There are problems with four predictors (Pop, HCPot, NOx, and NOxPot), Let's try the log transform and check again for those predictors:
+
+The easiest way to do this is to make a new matrix:
+
+```{r}
+detach(airpollution)
+newair <- airpollution
+newair[ ,c("Pop", "HCPot", "NOx", "NOxPot")] <- log(newair[, c("Pop", "HCPot", "NOx", "NOxPot")])
+colnames(newair)[c(10, 13, 14, 16)] <- c("log(Pop)", "log(HCPot)", "log(NOx)", "log(NOxPot)")
+attach(newair)
+for(i in c(10, 13, 14, 16)) {
+   mplot(Mortality, newair[, i], add.line=1, varNames =  c(colnames(airpollution)[i], "Mortality"))
+   print(cor(Mortality, newair[, i]), 3)
+} 
+```
+
+so in all cases the log transform worked, and we will use newair from now on.
+
+Let's find the correlations in absolute value of the predictors with the response, in order:
+
+```{r}
+cors <- round(cor(newair), 2)
+sort(abs(cors[ ,"Mortality"]), decreasing = TRUE)[-1]
+```
+
+Next we look at the correlations between the predictors. 
+
+```{r}
+cors[-1, -1]
+```
+We find:
+  
+a) there are sizable correlations (for example cor(NonWhite,JulyTemp)=0.60)
+
+b) LOGT(NOxPot) and LOGT(NOx) are perfectly correlated.
+Because of a) unterpreting (understanding) the final model will be difficult.
+
+Using perfectly correlated predictors is not possible so we eliminate one of them, say log(NOx):
+
+```{r}
+detach(newair)
+newair <- newair[ ,-16]
+attach(newair)
+```
+ 
+Next we fit a model with all the predictors and check the assumptions:
+
+```{r, warning=FALSE}
+mlr(Mortality , newair[, -1] )
+```
+
+The residual vs fits plot looks fine, so there is no problem with the model.
+
+The normal plot is ok, so no problem with the nomal assumption.
+The residual vs fits plot looks fine, so there is no problem with the equal variance assumption.
+
+Next we use the best subset regression to see whether we can find a model with fewer predictors. 
+
+```{r}
+mallows(Mortality, newair[, -1])
+```
+
+It suggests a model based on JanTemp, Rain, PopDensity, NonWhite, WhiteCollar and LOGT(NOx) with Mallow's C~p~=4.32
+
+```{r, warning=FALSE}
+mlr(Mortality, 
+    newair[, c("JanTemp", "Rain", "PopDensity", "NonWhite",
+               "WhiteCollar", "log(NOx)")])
+```
+
+Because the best model does still include one of the pollution variables, we can conclude that pollution adds to the mortality rate.
+
+And we are done!
+
+
+```{r, echo=FALSE}
+detach(houseprice)
+detach(newair)
+```
+

@@ -1,0 +1,125 @@
+---
+header-includes: \usepackage{color} 
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+require(knitr)
+require(ggplot2)
+require(grid)
+```
+`r hl()$basefontsize()`
+
+#Introduction to ESMA 3102
+
+This page discusses some general concepts of ESMA 3102.
+
+##3101 vs. 3102
+
+In ESMA 3101 (3015) we were mainly concerned with answering questions about one variable at a time. We considered problems like these:
+
+-  What is the average height of men in Puerto Rico? (Find the mean or median, or draw a histogram or boxplot, or find a confidence interval)
+
+-  Are men in Puerto Rico on average taller than 5'10''? (do a hypothesis test) 
+
+-  Has the average income in Puerto Rico gone up in the last ten years? (hypothesis test)
+
+In ESMA 3102 we are going to study two (or more) variables simultaneously, and we are really interested in their relationships:
+  
+-  Is the average height of men in Puerto Rico different from men in the USA and from men in Europe?
+  
+-  How does the average height of men relate to things like their economic status (income), their race, their diet, et.
+  
+-  How does the average income in Puerto Rico depend on the economic policies of the Government?
+
+##Categorical vs. Quantitative Variables
+
+We categorize variables as follows: 
+
+###Quantitative
+
+data is numeric, and arithmetic makes sense (adding, multiplying etc.)
+
+**Examples:**
+
+1) Yearly income of a family in Puerto Rico
+
+2) Temperature in Mayaguez at 12 Noon
+
+3) Amount paid for the phone bill 
+  
+###Categorical
+  
+everything else
+
+**Examples:**
+
+1) A students major
+
+2) in an experiment to grow wheat three different fertilizers were labeled 1,2 and 3
+
+3) Your student id number 
+  
+Note: often whether a variable is categorical or quantitative depends on how (and how precisely) it is measured.
+
+**Example** Our variable is "rain yesterday"
+
+-  Did it rain at all yesterday? "Yes" or "No" &rarr; categorical
+ 
+-  We put a cup outside. The cup has marks for each cubic inch of rain. Our data is the number of cubic inches. Values will be 0, 0.1, 0. 2 etc. &rarr; quantitiative
+
+Categorical data comes in one of two versions - ordered or unordered:
+
+**Examples**
+
+1) grades in a course: A, B, C, D, W - ordered
+
+2) gender: Male, Female - unordered
+
+3) Treatments in a clinical trial: A, B, C - unordered 
+
+4) Treatments in a clinical trial: 1, 2, 3 - unordered  
+
+5) blood pressure: low medium high - ordered  
+
+6)   directions: north east south west - unordered
+
+One consequence of having an ordering is that it should be used in graphs, tables etc.
+
+**Recognizing what the type of your data is has to be the first thing you do with any data set. It will determine everything that you do later. Getting this wrong likely means anything you do is wrong. **
+
+For more on data types see page 32 of the textbook.
+
+##Predictor - Response Paradigm
+
+It is often useful to think of the problems we discuss in this class as trying to use one (or more) variables to predict another 
+
+```{r, echo=FALSE}
+x <- c("Gender", "Gender", "GPA in high school, points on college", "Whether fertilizer was used or not", "Size of lot, size of house, number of bedrooms, quality of neighborhood")
+y <- c("Grade in Course", "Income", "GPA after the freshmen year in college", "Yield of crop", "Price of House")
+out <- data.frame(Predictor=x, Response=y)
+kable(out)
+```
+
+##Types of Problems in 3102
+
+Depending on the type of data we need to use different methods of analysis. Here is a table to help with this: 
+
+```{r,echo=FALSE}
+x <- c("Categorical","Categorical", "Quantitative")
+y <- c("Categorical", "All Categorical"," At least one quantitative")
+z <- c("Categorical Data Analysis", "ANOVA", "Correlation and Regression")
+out <- data.frame(Predictor=y, Response=x,Method=z)
+colnames(out)[1] <- "Predictor(s)"
+kable(out)
+```
+
+###Warning
+
+This table maybe the most important item for you to learn - understand - memorize - use. Without it you can not pass this class, or do Statistics in real live!
+

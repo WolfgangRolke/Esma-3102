@@ -1,0 +1,108 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#All Categorical - Simpson's Paradox
+
+(or better Yule-Simpson's Paradox) 
+
+###Case Study: Sex Discrimination in Graduate School Admissions
+
+The famous Berkeley data on sex discrimination. In fall quarter, 1973, there were 8,442 men who applied for admission to graduate school, and 4,321 women.
+
+Source: Freeman, D., Pisani, R., Purves, R. and Adhikiri, A. (1991) Statistics (2nd edition). WW Norton.
+
+First we will look at the overall admittance numbers:
+
+```{r}
+attach(berkeleyadmissions)
+berkeleyadmissions[1:2, 1:3]
+```
+
+Let's find the percentages:
+
+```{r}
+round(c(3738/8442, 1494/4321)*100, 1)
+```
+
+which shows a sizable difference in admission rates. We can also do the test:
+
+```{r}
+chi.ind.test(berkeleyadmissions[1:2, 2:3])
+```
+
+1) Parameters of interest: measure of association 
+  2) Method of analysis: chi-square test of independence 
+  3) Assumptions of Method: all expected counts greater than 5
+  4) Type I error probability $\alpha$=0.05 
+  5) H~0~: Classifications are independent = there is **no** difference in the admissions rates of men and women. 
+  6) H~a~: Classifications are dependent = there is some difference in the admissions rates of men and women.
+  7) p=0.000
+  8) 0.000<0.05, we reject the null hypothesis, there is some difference in the admissions rates of men and women. 
+  
+Now let's consider the data with the majors
+
+```{r}
+berM <- berkeleyadmissions[ ,5:6] 
+berM
+round(berM[ ,2]/berM[ ,1]*100, 2)
+berF <- berkeleyadmissions[ ,7:8] 
+berF
+round(berF[,2]/berF[,1]*100, 2)
+```
+
+and suddenly any hint of sex discrimination is gone.
+
+A formal hypothesis test for this is possible but outside the scope of this course. 
+
+So, we have a paradox:
+
+- we found strong evidence (p value=0.00) of a relationship between the gender of an applicant and whether or not they were admitted to the School. 
+
+- when we broke down the data further by the major of the applicant, this relationship went away. 
+
+How is this possible? 
+
+Actually, we already know the answer: this is again an issue caused by confusing *Cause-Effect* with *Latent Variable*.
+
+There is clearly a relationship between acceptance and gender. But saying it is due to sex discrimination is saying we have a cause - effect relationship. Instead we now know it is because of the latent variable Major.
+
+Can we understand this in the Berkeley Admissions case?
+
+Majors A and B are very popular with the men - 1385  men applied vs. 133 women. Majors A and B are also easy to get in - about 2 out of 3 of the applicants (men or women) get accepted. So although men and women have the same acceptance rate, 10 times as many men are accepted because 10 times as many applied.
+
+Majors C-F are more popular with the women - 1346  men applied vs. 1702 women. But Majors C-F are hard to get in - about 1 in 4 of the applicants (men or women) get accepted. So these majors don't add much to the total student body. 
+
+If in an observational study (as opposed to a clinical trial with random assignments to "treatment" and "control") we find an relationship (association) between two variables it is usually very hard (impossible?) to decide whether it is due to a cause-effect relationship or whether there is a latent variable responsible for the relationship. In the Berkeley case it turned out that Major was a latent variable. A list of other potential latent variables includes:
+
+1. Prior educational achievements  
+2. Age  
+3. Financial situation of parents  
+
+and so on.  
+
+Note that we could determine here that Majors is a latent variable explaining the relationship between Gender and Acceptance because we had the data to do so! So generally in a study you want to "measure" as many variables as possible because you won't know ahead of time which of them might turn out to be important.
+
+
+```{r, echo=FALSE}
+detach(berkeleyadmissions)
+```

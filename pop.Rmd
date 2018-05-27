@@ -1,0 +1,147 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Describing a Population: Probability Distributions
+
+Recall the following definitions from Esma 3101:
+
+**Population**: all of the entities (people, events, things etc.) that
+are the focus of a study 
+
+**Sample**: any subset of the population
+
+**Parameter**: any numerical quantity associated with a population
+
+**Statistic**: any numerical quantity associated with a sample
+
+How can one describe  a population? Sometimes this can be done by **enumeration (counting)**:
+
+**Example:** Say we are interested in the age of the undergraduate students at the Colegio. So we go to the Registrar's office and ask them for help. They give us a computer file with the ages of all the students: 
+
+21 21 19 20 23 25 19 19 .....
+
+from this we can find a table:
+
+```{r, echo=FALSE}
+Age <- c(17, 18, 19, 20, 21, 22, 23, 24, 25)
+Counts <- c(21, 402, 2109, 2957, 2089, 1908, 1105, 788, 208)
+kable(data.frame(Age, Counts))
+```
+
+
+and this table is a complete description of our population!
+Now it would be easy to find various numbers for this population:
+
+- what percentage of the students is 19 years old?
+
+2109/11587 *100% = 18.2%
+
+- what is the 80^th^ percentile of the ages? 
+
+22 years 
+
+- what is the mean age of the students:
+
+(17*21+18*402+..+25*208)/11587 = 20.9 
+
+These are numbers computed using the whole **population**, so these are **parameters**.
+
+This simple way of describing a population works very rarely, in most cases we need to do something different:
+
+**Example:** We want to study the incomes of families in Puerto Rico. Now it turns out that this kind of study has been done numerous times in many places, and Economists have worked hard to develop theories, and when we put it all together it seems reasonable that the **income distribution** in Puerto Rico looks like this:
+
+```{r, echo=FALSE}
+x <- seq(0, 150000, 100)
+f <- function(x) 35000*dchisq(x/10000, 5)
+splot(f(x), x, add.line = 3, plot.points = FALSE, label_x = "Income", label_y = "Frequency", plotting.size=1.2, plotting.colors = "blue")
+```
+
+
+
+Here  we are ignoring anyone with an income over $150000.
+
+What is such a curve telling us? As before we can find from it many numbers of interest. For example probabilities about the population:
+
+Say we randomly select a family in Puerto Rico. What is the probability that this family has an income between $20000 and $40000? 
+
+This probability is given by the area under the curve from 2 to 4:
+
+```{r, echo=FALSE}
+plot(x, f(x), type="l", xlab = "Income", ylab = "Frequency")
+fc(20000, 40000, f)
+```
+
+
+Finding this analytically would require some advanced math (the answer is 42.4%)
+
+The basic idea here is: populations can be described by probability distributions, that is theoretical curves. Once such a distribution is known, anything one wants to know can be calculated from it (at least in theory, in practise the math might be quite difficult).
+
+Notice that this is a straight-forward generalization of the enumeration method we used for the ages of the undergraduates, only there the math is very easy because we know how to find areas of rectangles!
+
+Often in real live we have some theoretical reason to suspect that a certain distribution has a certain shape:
+
+**Example** say we randomly select an undergraduate student from the Colegio and measure their height. Then in seems reasonable that the corresponding distribution looks like this:
+
+```{r, echo=FALSE}
+x <- seq(5.2, 6.0, length=250)
+y <- dnorm(x, 5.4, 0.1) +  1.1*dnorm(x, 5.7, 0.1)
+splot(y, x, add.line = 3, plot.points = FALSE, 
+    label_x = "Height", label_y = "Frequency")
+```
+
+Now life as a Statistician would be quite difficult if we would have to invent a new distribution everytime we study a new experiment. Instead it turns out that there are a number of basic distributions that we encounter time and again. These have been studied in great detail, and so we now have a lot of formulas easily available.
+  
+**Example**: say we randomly select an undergraduate student. We want to know whether the student is male or female.
+
+The crucial part here is that there are only two possibilities: male or female. Any such experiment is called a **Bernoulli trial**. Here some other examples:
+
+- student is in Arts&Sciences, or not 
+
+- student has a GPA of 3.5 or higher, or not
+
+- student was born in Puerto Rico or not
+
+All these experiments share the feature that there are only two answers. Of course they differ in the probability that the answer is "yes":
+
+- probability that a student is male: 50.8% 
+
+- probability that a student is a Arts &amp; Sciences: 41.6%? 
+
+- student has a GPA of 3.5 or higher, or not: 21.8% 
+
+- student was born in Puerto Rico or not: no idea 
+
+And this is an important feature here: often from the description of the experiment we can make a guess what the general shape of the distribution is. The exact shape, though, depends on some numbers we often don't know. So what do we do? Statistics! 
+
+- student was born in Puerto Rico or not: we now need to find a sample of students, find the percentage of students born in Puerto Rico in the sample, and use that as a guess for the percentage in the whole population.
+
+Although it is not at all obvious why this should be so, it turns out that the most important of these basic distributions is the **Normal Distribution**, characterized by a bell-shaped histogram:
+
+```{r, echo=FALSE}
+x <- seq(0, 10, length=250)
+y <- dnorm(x, 5, 2)
+splot(y, x, add.line = 3, plot.points = FALSE, 
+      label_x = "", label_y = "Frequency")
+```
+
+A normal distribution has two parameters: the mean $\mu$ (which is where the peak of the curve is) and the standard deviation $\sigma$, which tells out how far out the curve goes. 

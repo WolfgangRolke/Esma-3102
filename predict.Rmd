@@ -1,0 +1,187 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Prediction
+
+##Categorical - Categorical
+
+###Case Study: Treatment for Hair Loss
+
+Say we want to know the following: what is the percentage of men who using Rogain will grow no hair? The answer is simple: 301 of 714 for 301/714*100% = 42.2% of the men in the treatment group had no hair growth. As always though in Statistics we also want an estimate of the error in this prediction. We learned in 3101 how to do this:
+
+```{r}
+one.sample.prop(301, 714)
+```
+
+Notice, though, that this calculation uses only the numbers 301 and 714, not any of the other results of the experiment. Moreover, if we did the same calculation for all the combinations of groups we would calculate 10 confidence intervals, and again we have a problem of **simultaneous inference**. 
+
+It turns out that this is a type of problem too difficult for this class.
+
+##Categorical - Quantitative 
+
+###Case Study - Babies and Cocain Use by the Mother 
+
+Find 95% confidence intervals for the lengths of the babies in the Drug Free group: 
+
+```{r, fig.show='hide'}
+attach(mothers)
+one.sample.t(Length[Status=="Drug Free"], ndigit = 2)
+```
+
+The difficulty again is if we do this for all three groups:
+
+- Drug Free (50.16cm, 52.04cm)  
+- First Trimester (48.09cm, 50.51cm)  
+- Throughout (46.78cm, 49.22cm)  
+
+because these are individual ci's, not a collection of ci's with the correct confidence level. As above we have the problem of  
+**simultaneous inference**. 
+
+##Quantitative -Quantitative  
+
+###Case Study: Quality of Fish 
+
+A study was conducted to examine the quality of fish after several days in ice storage. Ten raw fish of the same kind and quality were caught and prepared for storage. Two of the fish were placed in ice storage immediately after being caught, two were placed there after 3 hours, and two each after 6, 9 and 12 hours. Then all the fish were left in storage for 7 days. Finally they were examined and rated according to their "freshness".
+
+Use this data set to estimate the quality of a fish that was put into ice 4 hours after being caught. 
+
+```{r}
+attach(fish)
+fish
+```
+
+```{r}
+splot(Quality, Time)
+```
+
+```{r}
+slr(Quality, Time)
+```
+assumptions look ok.  
+
+so we have  
+$$
+\text{Quality} = 8.46 - 0.142 * 4 =  7.9 
+$$
+We can also let R do the calculation for us:
+ 
+```{r}
+slr.predict(Quality, Time, newx=4)
+```
+
+###Confidence vs. Prediction Intervals
+
+Again we  want an idea of the "error" in our estimate. Previously we used confidence intervals to do this. Here we will again use confidence intervals, but in the context of regression there are two types of intervals:
+
+**Confidence Interval** - used to predict the **mean** response of **many** observations with the desired x value.
+
+**Prediction Interval** - used to predict the **individual** response of **one**  observation with the desired x value.
+
+`r hl()$fontcolor("Warning")` The terminology is a little confusing here, with the same term meaning different things: Both confidence intervals and prediction intervals as found by the regression command are confidence intervals in the sense discussed before, and both are used for prediction! 
+
+They differ in what they are trying to predict, on the one hand an **individual response** (PI), on the other hand the **mean of many responses** (CI).
+
+**Example** Let's consider the Quality of Fish data. Use this data set to find a 95% interval estimate for the quality of a fish that was put into storage after 4 hours.
+  
+We are talking about **one** fish, so we want a **prediction** interval: 
+
+```{r}
+slr.predict(Quality, Time, newx=4, interval="PI")
+```
+
+so a  95% prediction interval for the  rating of fish after 4 hours is  (7.60, 8.19)
+
+**Example** Again consider the Quality of Fish data. Use this data set to find a 90% interval estimate for the mean quality of fish that were put into storage after 4 hours.
+  
+Now we are interested in the **mean** rating of many fish, so we want a **confidence** interval. Also we want a 90% interval instead of 95%:
+
+```{r}
+slr.predict(Quality, Time, newx=4, 
+            interval="CI", conf.level = 90)
+```
+
+so a 90% confidence interval for the mean rating of fish after 4 hours is  (7.81, 7.97).
+
+The two 90% intervals are shown in the next graph, the prediction interval in green and the confidence interval in red:
+
+
+
+```{r echo=FALSE}
+y1 <- slr.predict(Quality, Time, newx=4, 
+            interval="CI", conf.level = 90)
+y2 <- slr.predict(Quality, Time, newx=4, 
+            interval="PI", conf.level = 90)
+plt <- splot(Quality, Time, add.line = 1, return.graph = TRUE)
+plt + 
+  geom_segment(aes(x=3.9, y=y1[3], xend=3.9, yend=y1[4]),
+               color="red", size=2) + 
+  geom_segment(aes(x=4.1, y=y2[3], xend=4.1, yend=y2[4]),
+               color="green",size=2) 
+```
+
+Notice that the prediction intervals are always wider than the confidence intervals. They are also the ones you want most of the time. So if you are not sure which you should use, use the prediction interval.
+
+The slr.predict command can also be used to find a number of fits and intervals simultaneously:
+
+```{r}
+slr.predict(Quality, Time, newx=1:10, 
+            interval="PI", conf.level = 90)
+```
+
+If the newx argument is left off the predicition is done for the data itself:
+
+```{r}
+slr.predict(Quality, Time, 
+            interval="PI", conf.level = 90)
+```
+
+##Prediction vs. Extrapolation
+
+There is a fundamental difference between predicting the response for an x value **within** the range of observed x values (=Prediction) and for an x value **outside** the observed x values (=Extrapolation). The problem here is that the model used for prediction is only known to be good for the range of x values that were used to find it. Whether or not it is the same outside these values is generally impossible to tell.
+
+**Note **Another word for prediction is **interpolation** 
+
+**Example**: Quality of Fish data
+
+```{r echo=FALSE}
+plt <- plt + geom_vline(xintercept = 12, size=2)
+x <- seq(12, 20, length=100)
+y <- 8.46 - 0.142 * x
+df <- data.frame(x=x, y=y)
+plt <- plt + geom_line(data=df, aes(x, y), color="red")
+y <- 8.46 - 0.142 * x + (x-12)^2/100
+df <- data.frame(x=x, y=y)
+plt <- plt + geom_line(data=df, aes(x, y), color="red")
+y <- 8.46 - 0.142 * x - (x-12)^2/100
+df <- data.frame(x=x, y=y)
+plt <- plt + geom_line(data=df, aes(x, y), color="red")
+plt <- plt + 
+  annotate("text", x=4, y=5.5, label="Prediction") +
+  annotate("text", x=15, y=5.5, label="Extrapolation")
+plt
+```
+
+```{r, echo=FALSE}
+detach(mothers)
+detach(fish)
+```

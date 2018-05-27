@@ -1,0 +1,117 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Exercise Problems 3 
+
+###Case Study: Survey of Students
+
+This is the same data set we considered in Exercise Problems 1. The data is in **studentsurvey**
+
+**Problem 1** What can you say about the relationship between Score and Gender? 
+
+**Problem 2** What can you say about the relationship between Score and GPA? Find a 95% interval estimate for a student with a GPA of 2.5. Is this an interpolation or an extrapolation? 
+  
+**Problem 3** What can you say about the relationship between Score and Distance? Find a 99% interval estimate for a student who lives 1.5 miles from the school. Is this an interpolation or an extrapolation?
+    
+**Problem 4** What can you say about the relationship between Score and Age? Find a 90% interval estimate for the mean score of  21 year old students. Is this an interpolation or an extrapolation?
+
+```{r}
+attach(studentsurvey) 
+```
+
+**Problem 1** What can you say about the relationship between Score and Gender?
+
+In problem 1 of the Exercise Problems 2 we ran the ANOVA and found a statistically significant difference between the scores of males and females. Because there are just two groups there is no reason to run tukey, but rerunning the same command gives us a 95% confidence interval for the difference in scores:
+
+```{r}
+oneway(Score, Gender) 
+```
+
+`r hl()$hr()`
+
+**Problem2** What can you say about the relationship between Score and GPA? 
+
+In problem 3 of the Exercise Problems 2 we  found a statistically significant correlation between Score and GPA. Let's find a good model. 
+
+```{r}
+slr(Score, GPA)
+```
+
+the residual vs fits plt and the normal plot looks good, so no problem with the assumptions. We find the model 
+
+$$
+\text{Score} = 3.12 + 1.33 \text{ GPA}
+$$
+
+Find a 95% interval estimate for a student with a GPA of 2.5. Is this an interpolation or an extrapolation?
+```{r}
+slr.predict(Score, GPA, newx=2.5, interval="PI")
+```
+
+so a 95% prediction interval  for a student with a GPA of 2.5 is (2.65, 10.24)
+
+This is an interpolation because 2.5 is in the range of GPAs in the data set 
+`r hl()$hr()`
+**Problem 3** What can you say about the relationship between Score and Distance? 
+
+In problem 5 of the Exercise Problems 2 we used a log transform on Distance. Doing so again yields 
+```{r}
+slr(Score, log(Distance + 1))
+```
+the residual vs fits plt and the normal plot looks good, so no problem with the assumptions. We find the model 
+
+Score = 6.2 + 0.042 log(Distance+1) 
+
+Find a 99% interval estimate for a student who lives 1.5 miles from the school. Is this an interpolation or an extrapolation?
+```{r}
+slr.predict(Score, log(Distance+1), 
+        newx=log(1.5+1), interval="PI", conf.level = 99)
+```
+so a 95% prediction interval for a student who lives 1.5 miles from the school is (0.94, 11.54)
+
+**Note** newx=log(1.5+1) because we have the predictor log(Distance+1).
+
+This is an interpolation because 1.5 is in the range of Distances in the data set.
+`r hl()$hr()`
+
+**Problem 4 ** What can you say about the relationship between Score and Age? 
+
+Before we saw that observation #220 is an outlier and removed it. We do the same now. Then
+```{r}
+slr(Age[-220], Score[-220])
+```
+
+Find a 90% interval estimate for the mean score of 21 year old students. Is this an interpolation or an extrapolation?
+
+```{r}
+slr.predict(Score[-220], Age[-220], 
+            newx=21, interval="CI", conf.level = 90)
+```
+so a 90% confidence interval for the mean score of 21 year old students is (5.82, 6.44)
+
+This is an interpolation because 21 is in the range of Ages in the data set. 
+
+
+```{r, echo=FALSE}
+detach(studentsurvey)
+```

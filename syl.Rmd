@@ -1,0 +1,50 @@
+---
+header-includes: \usepackage{color} 
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+require(knitr)
+require(ggplot2)
+require(grid)
+```
+`r hl()$basefontsize()`
+
+## Syllabus
+
+Professor: Dr. Wolfgang Rolke
+
+The web address is http://academic.uprm.edu/wrolke/esma3102.
+
+The official prontuario for the course is available from the usual site. If there is any difference between the prontuario and the information on the webpage use the webpage.
+
+Time and Place: 
+
+Tuesday, Thursday CH115 2:00-3:15pm
+
+Textbook: Statistics, Informed Decisions using Data, Michael Sullivan
+  (**highly recommended but not required**)
+  
+Office hours: 
+
+Tuesday, Thursday OF407 
+
+Wednesday  1:30-3:00pm via email 
+
+email: wolfgang[dot]rolke[at]upr[dot]edu  
+when you send me an email `r hl()$fontcolor("ALWAYS")` start the subject line with ESMA3102
+
+**Grading**:
+
+1.  Quizzes: 35%
+
+2.  Partial Exams 35%
+
+3.  Final 30%
+
+All quizzes and exams will be done using moodle. To get to the quizzes go to [https://ecourses.uprm.edu/](https://ecourses.uprm.edu/), log on with your UPR ID and password. The first time use the enrollment key: `r hl()$fontcolor("Esma 3102 - 086")`.

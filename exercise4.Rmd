@@ -1,0 +1,165 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Exercises 4
+
+###Case Study: Survey of Students
+This is the same data set we considerd in the previous exerceises. 
+
+**Problem 1** Find the best model to predict Score from GPA and Distance.
+
+**Problem 2** Analyse the data with score as the response and Gender and Years as factors (predictors).
+  
+**Problem 3** Find a 90% interval estimate for the score of a male student with a GPA of 2.15. Is this an interpolation or an extrapolation?
+
+**Problem 4** Find a 95% interval estimate for the score of a 20 year old male student who lives 2 miles from school. (code the variable Gender, ignore the issue of parallel lines)
+
+`r hl()$hr()`
+
+`r hl()$hr()` 
+
+```{r}
+attach(studentsurvey) 
+```
+
+**Problem 1** Find the best model to predict Score from GPA and Distance.
+
+In  Exercise Problems 3 we found a linear model in GPA and a log model in Distance, so let's try this:
+
+```{r}
+mlr(Score, cbind(GPA, log(Distance + 1)))
+```
+
+the plots look good, so no problem with the assumptions.
+
+Notice that the name of the variable Distance is missing. If we want to fix that we can do this:
+
+```{r}
+X <- cbind(GPA, log(Distance + 1))
+colnames(X) <- c("GPA", "log(Distance + 1)") 
+mlr(Score, X)
+```
+
+Can we simplify the model?
+
+```{r}
+mallows(Score, X)
+```
+
+the smallest C~p~ is for the model with GPA only, so this is best. 
+
+```{r}
+slr(GPA, Score) 
+```
+
+`r hl()$hr()`
+
+**Problem 2** Analyse the data with score as the response and Gender and Years as factors (predictors).
+
+this is a twoway ANOVA problem. In Exercise Problems 2 we already looked at the boxplots and the summary statistics. Next we need to consider any possible interaction: 
+
+In problem 3 of the Exercise Problems 2 we  found a statistically significant correlation between Score and GPA. Let's find a good model. 
+
+```{r}
+iplot(Score, Gender, Year)
+```
+
+there seems to be interaction here. Can we test for it? We would need repeated measurements:
+```{r}
+table(Gender, Year)
+```
+
+which we have. So
+
+```{r}
+twoway(Score, Gender, Year) 
+```
+
+the plots look good, so no problems with the assumptions. 
+
+The test for interaction has p=0.5825 , so there is no evidence of interaction. We can refit with out it:
+
+```{r}
+twoway(Score, Gender, Year, with.interaction=FALSE) 
+```
+
+The test for Year has p=0.42, so Year does not effect score and so we can drop the term as well. We are now back to a oneway of Score by GPA, which we already analysed in Exercise Problems 2 and 3. 
+
+`r hl()$hr()`
+
+**Problem 3**  Find a 90% interval estimate for the score of a male student with a GPA of 2.15. Is this an interpolation or an extrapolation?
+
+We have a quantitative response (Score), a quantitative predictor (GPA) and a catgorical predictor( Gender), so this is a regression problem with a dummy variable. 
+ 
+```{r}
+dlr(Score, GPA, Gender)
+```
+
+do we need the product term?
+
+```{r}
+independent.lines <- dlr(Score, GPA, Gender, return.model=TRUE)
+parallel.lines <- dlr(Score, GPA, Gender, additive=TRUE,
+                 return.model=TRUE)
+nested.models.test(parallel.lines, independent.lines)
+```
+
+gives p=0.000, so the product term is indeed necessary.
+
+Next we want a 90% interval estimate for the score of a male student with a GPA of 2.15:
+
+```{r}
+dlr.predict(Score, GPA, Gender, newx=2.15, 
+            newz="Male", interval="PI", conf.level=90)
+```
+
+Is this an interpolation or an extrapolation?
+
+```{r}
+range(GPA[Gender=="Male"])
+```
+
+shows that 2.15 is in the range of data values for males, so this is an interpolation. 
+
+`r hl()$hr()`
+
+**Problem 4** Find a 95% interval estimate for the score of a 20 year old male student who lives 2 miles from school. (code the variable Gender, ignore the issue of parallel lines)
+
+As before we need to remove observation #220 from the data set and we need to use the log tranform on Distance:
+
+```{r}
+X <- data.frame(Distance=log(Distance[-220]+1), Age=Age[-220], Gender=ifelse(Gender[-220]=="Male", 1, 0))
+mlr(Score[-220] , X) 
+```
+
+When doing prediction there is usually no reason to simplify the model, so we won't use Mallows C~p~. Now
+
+```{r}
+newx <- cbind(Distance=log(2)+1, Age=20, Gender=1)
+mlr.predict(Score[-220], X, newx=newx, interval="PI")
+```
+
+
+```{r, echo=FALSE}
+detach(studentsurvey)
+```

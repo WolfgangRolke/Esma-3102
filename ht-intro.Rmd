@@ -1,0 +1,128 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Hypothesis Testing - An Introduction
+
+Often a specific problem  falls under the following very general heading: 
+
+**we have a theory**
+
+**Example 1**: Is the new treatment better than the old one? 
+
+**Example 2**: Is the theory of evolution correct? 
+
+**Example 3**: Are coins fair? 
+
+**and we want to do an experiment to see whether the theory is true **
+
+**Example 1**: Take a number of patients. Give some of them the old treatment and some of them the new one. See whether there is a difference. 
+
+**Example 2**: Ask a biologoist what would make a good experiment 
+
+**Example 3**: Flip the coin and count the number of heads and tails.
+
+Finally we need to compare the results of the experiment with the theory to see whether they agree. This is what a hypothesis test does. 
+
+`r hl()$vs()`
+
+Now the first thing we need to recognize is
+
+**One of the principles of Science is that it is  impossible to prove that a theory is correct but it is always possible to prove that the theory is false (a theory can be falsified)**
+
+**Example 1**: If the new treatment is actually better but only by a tiny little bit it might be impossible to be sure. If it is much better it will be obvious. 
+
+**Example 2**: Biologists have been inventing new ways to test the theory of evolution for 150 years. None of them has ever proven the theory wrong, but that does not mean the next one won't do so. (Even though by now that is very unlikely!)
+
+**Example 3**: If we flip the coin 100 times and get 50 heads and 50 tails, does this prove the coin is fair? No because the same result is quite likely if the probability of heads where 0.51 (say). Of course by now we can be sure the coin is almost fair, but that is not the same as exactly fair!
+
+**Example 4**: Theory: the tooth fairy does not exist
+
+Now I am sure most of us are quite certain this theory is correct. After all no one has actually seen her. But maybe that is because she has lived on the planet Zoloff for the last 500 years? And of course, if she shows up on TV tomorrow (and can prove that she is indeed the tooth fairy) our theory has been proven false immediately!
+
+**Example 5**: Theory: all swans are white
+
+That is what everybody thought in Europe, until in the 18th century they found black swans in Australia! 
+
+`r hl()$vs()`
+
+Because of this a hypothesis test is set up so the data can proof the theory to be false:
+
+**Example 1**: Null Hypothesis H_0:  the new treatment is NOT better than the old one.
+
+**Example 2**:  Null Hypothesis H_0:  the theory of evolution is correct
+
+**Example 3**:  Null Hypothesis H_0: the coin is fair
+
+**but NOT proving the theory is false is not the same as accepting the theory as true!**
+
+That is why we say we fail to reject the null hypothesis instead of just saying we accept the null hypothesis. 
+
+`r hl()$vs()`
+
+Let's have a closer look at example 3. Here the experiment to check the theory is very simple, in fact I have a shiny app that will do it for us: 
+
+
+###App: coin
+
+```{r eval=FALSE}
+run.app(coin)
+```
+
+The app flips a coin 100 times and shows the results. By default it is a fair coin (p=0.5) but we can change that  on the left. Recall we have 
+
+$$
+\begin{aligned}
+&H_0: p    = 0.5 \text{ (coin is fair)}\\
+&H_a: p    \ne 0.5 \text{ (coin is not fair)}     \\
+\end{aligned}
+$$
+
+Next we can decide on the **Rejection Region**:
+
+In this experiment we would reject the theory of a fair coin if the number of heads is far from 50. 
+
+What do you think this should be? Set the sliders accordingly.
+
+Now click the Run! button and repeat the experiment 20 times. Each time you can see the number of heads and whether or not we would reject the theory.
+
+Doing this one at a time is a bit slow, and we really should do this many times, so switch to the Many Runs tab. Here we see the results of 100000 runs of this experiment. 
+
+Now move the sliders for the Rejection Region to 45 and 55. The cases in blue are those where the 100 flips resulted in a number of heads between 45 aand 55, and we would not reject the theory of a fair coin. 
+
+In red we have all the cases with either less than 45 or more than 55 heads, and so here we would reject the theory of a fair coin. As we see that happens about 27% of the time.
+
+But we are still flipping a fair coin, so we should not reject the theory at all, doing so is an error. Soon we will call this the **type I error**. The 27% will be called the **type I error probability $\alpha$**.
+
+Committing an error in about 1 in 4 cases (~27%) does not sound like a good idea. So let's make this much smaller. Move the slider to 40-60, and then then we have $\alpha=3.5\%$, much better.
+
+But there is also a downside to this. Let's select a **Slightly unfair (p=0.6)** coin. Now the coin is NOT fair, and we should reject the theory. But we are doing so only 46% of the time, the other 54% of the runs wrongly make the theory look ok. 
+
+This mistake is called the **type II error**. The 54% is called the **type II error probability $\beta$**. 
+
+The percentage of runs that correctly reject the theory is called the **power** of the test. 
+
+Now if we go back to Rejection Region  45-55 the percentage of correctly rejected false theories goes up to 82.3%, much better. 
+
+Of course in real life we do not know whether the coin is fair or not, so we how do we choose the Rejection Region? We do it by choosing a type I error probability $\alpha$ that seems acceptable to us. Often this is about 5%, and that leads to 41-59.
+
+Once we have decided on $\alpha$ we can the do some math to see what the $\beta$ might be, but this will depend on how unfair the coin might be. 

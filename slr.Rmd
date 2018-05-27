@@ -1,0 +1,180 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Quantitative Predictor - Quantitative Response: Simple Linear Regression
+
+###Case Study: Wine Consumption and Heart Disease
+
+Data for 19 developed countries on wine consumption (liters of wine per person per year) and deaths from heart disease (per 100000 people). (taken from David Moore: The Active Practice of Statistics)
+
+```{r}
+attach(wine)
+wine
+```
+
+Basic Question: **What is the relationship between wine consumption and heart disease?**
+
+with two quantitative variables we will usually start with a scatterplot, but for that we need to decide which of our variables is the predictor and which the response.
+
+Often this will be clear from the question ("predict A from B"), here it is not. But here we have a before-after case (people drink wine for many years, how does that effect their chances of heart disease later in life?) so it seems reasonable that we choose
+
+predictor x = wine consumption  
+response y = heart disease
+
+and so we have 
+
+```{r}
+splot(Heart.Disease.Deaths, Wine.Consumption) 
+```
+
+and clearly we have a strong (negative) relationship. If it is not clear enough we can check Pearson's correlation coefficient:
+
+```{r, warning=FALSE}
+cor(Wine.Consumption, Heart.Disease.Deaths)
+```
+
+So, how can we describe the relationship? For quantitative data this means finding a *model*, that is an *equation*
+
+**Examples**
+
+- heart disease = 260-10*wine consumption  
+- heart disease = 250-7*wine consumption  
+- heart disease = 250-10*wine consumption+1.2*wine consumption^2^  
+- heart disease = 260-50*log(wine consumption)  
+
+ect.
+
+Having such a model would allow us among other things to predict a likely y value for a case with a known x value. 
+
+**Example**  
+
+say the model is  heart disease = 260-10*wine consumption and we know that for a certain country (not in the dataset) wine consumtion is 3.7, then according to our model the heart disease rate should be about 
+
+$$
+\text{heart disease} = 260-10*3.7 = 223
+$$
+
+How do we find an equation? Well to find some equation is easy:
+
+```{r, eval=FALSE}
+splot(Heart.Disease.Deaths, Wine.Consumption)
+```
+
+```{r, echo=FALSE}
+plt <- splot(Heart.Disease.Deaths, Wine.Consumption, return.graph=TRUE)
+print(plt+
+ geom_abline(intercept=260, slope=-10, size=1.1, colour="red")+
+ geom_abline(intercept=280, slope=-20, size=1.1, colour="green")+
+ geom_abline(intercept=270, slope=-24, size=1.1, colour="orange")+
+ geom_abline(intercept=260, slope=-23, size=1.1, colour="blue"))   
+```
+
+clearly the red line is not very good (to flat), the green one is better but still a bit to flat, but how about the orange and blue ones? Both look reasonably good. 
+
+Is there a way to find a line that is "best" ? The answer is yes. In order to understand how we need to following:
+
+Let's concentrate for a moment on the third line, which has the equation 
+
+$$
+\text{Heart Disease} = 270-24*\text{Wine Consumption} 
+$$
+
+or short $y = 270-24x$ 
+
+The United States has a wine consumption of $x = 1.2$	liters and a heart disease rate of $y = 199$. Now if we did not know the heart disease rate we could use the equation and find
+
+$$
+y = 270-24x = 270-24*1.2 = 241
+$$
+
+Now we have 2 y's:
+
+- the one in the data ($y = 199$)   
+- the one from the equation ($y = 241$)
+
+Let distinguish between them by calling the first the **observed value** and the second one the **fitted value**. 
+
+Think of it in these terms: the fitted value is our guess, the observed value is the truth. So the difference between them is the **error** in our guess. We call this the **residual**: 
+
+$$
+\epsilon = \text{fitted} - \text{observed} = 241-199 = 42
+$$
+
+The line $y=270-24x$ **overestimates** the heart disease rate in the US by $42$.  
+
+If the line perfectly described the data, the residuals would all be 0:
+
+```{r, echo=FALSE}
+x <- 1:10
+splot(x, x, plotting.size=2, add.line=1)
+```
+
+This was done for the US, but of course we could do the same for all the countries in the dataset:
+
+```{r, echo=FALSE}
+fits <- 270-24*wine[,2]
+out <- cbind(wine, fits, wine[, 3]-fits)
+colnames(out)[2:5] <- c("Consumption", "Deaths", "Fits", "Residuals")
+kable(out)
+```
+
+so for each country our line makes an error. What we need is a way to find an **overall** error. The most popular method to do this is to find the **sum of squares** of the residuals:
+$$
+RSS = \sum \epsilon^2
+$$
+In the case of our line we find 
+$$
+RSS = (-1.0)^2+9.4^2+..+33.2^2 = 25269.8
+$$
+In the same way we can find an RSS for any line:
+
+- y = 280-10x , RSS = 71893  
+- y = 260-20x , RSS = 40738  
+- y = 260-23x , RSS = 24399.7  
+
+notice that the first two, which we said were not so good, have a higher RSS. So it seems that the lower the RSS, the better. Is there a line with the smallest RSS possible? The answer is again yes, using the method of **Least Squares** for which we have the routine:
+
+```{r fig.show='hide'}
+slr(Heart.Disease.Deaths, Wine.Consumption)
+```
+
+The least squares regression equation is:
+
+$$
+\text{Heart.Disease.Deaths}  = 260.563 - 22.969 \text{Wine.Consumption}
+$$
+
+very close to the last of our equations.
+
+What is its RSS? It is not part of the output, but I can tell you it is 24391.
+
+A nice graph to visualize the model is the scatterplot with the least squares regression line, called the **fitted line plot** 
+  
+```{r}
+splot(Heart.Disease.Deaths, Wine.Consumption, add.line=1)
+```
+
+
+```{r, echo=FALSE}
+detach(wine)
+```

@@ -1,0 +1,256 @@
+---
+output:
+  pdf_document:
+    fig_caption: no
+  html_document: default
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+require(knitr)
+require(ggplot2)
+require(grid)
+```
+`r hl()$basefontsize()`
+
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+##Case Study: Rogaine - Treatment for Hair Loss
+
+Rogaine is the first treatment for hair loss approved by the Food and Drug Administration. Here we have the results of one of the studies that were done to show that rogaine works. A randomized clinical trial was carried out. 1431 bald men were randomly assigned to two groups. The men in the treatment group received Rogaine, the men in the control group received a placebo. After some time the men were examined and assigned to one of 5 groups:
+  
+-  No Growth = no difference in amount of hair  
+-  New Vellus = some hair follicles  
+-  Min Growth = minimal hair growth  
+-  Mod Growth = moderate hair growth  
+-  Den Growth = dense hair growth 
+
+  
+**Basic Question: **Does rogaine work?**
+
+Type of variables:  
+
+```{r}
+head(rogaine)
+```
+
+
+Growth: Values = No Growth, .., Dense Growth are text, therefore categorical
+
+Group: Values: Treatment, Control, are text, therefore categorical
+
+two categorical variables &rarr; categorical data analysis
+
+`r hl()$hr()`
+
+Usually the first thing to do is to just count the number of times each combination has happened:
+  
+```{r}
+attach(rogaine)
+table(rogaine)
+```
+
+So, does rogaine work? This is a yes-no question, so we need to do a hypothesis test. The most popular method here is the **chisquare test for independence**. It has
+
+H~0~: Classifications are independent (here: Rogaine does **not** work)
+
+H~a~: Classifications are dependent (here: Rogaine works) 
+
+But why are "Classifications are independent" and "Rogaine does not work" the same thing? Consider: say we randomly choose one of the 1431 men that were part of this study. We do not know whether he received Rogaine or the placebo. What is the probability that the man had no growth? Well:
+
+$724/1431*100 = 50.6\%$
+
+Let's assume for the moment that rogaine is useless, it does no better than the placebo. In that case it would make no difference if we were also told that he used Rogaine, we should make the same guess of 50.6%. So knowing the value of the predictor (Rogaine or placebo) does not make any difference for the response (Hair growth) 
+
+they are **independent**
+
+What are the assumptions of this method? They are that  none of the **expected counts** is less than 5.
+
+To run the test use the **chi.ind.test** command. The argument has to be a table, so we run
+
+```{r}
+chi.ind.test(table(rogaine)) 
+```
+
+so the p value of the test is 0, and we should reject the null hypothesis of no relationship.  
+
+There is however also a warning:
+
+Some expected counts < 5! 
+
+This  part is because there is a problem with the expected  counts. 
+
+This generally happens when there is not enough data for some combinations. Looking at the table above it seems the number in the row Den Growth are to small. We can fix that by combining the Den Growth and the Mod Growth groups: 
+
+
+```{r}
+new.rogaine.table <- cbind(c(423, 150, 114, 29+1), c(301, 172, 178, 58+5))
+new.rogaine.table
+chi.ind.test(new.rogaine.table)
+```
+
+So, here is the test: 
+
+1. Parameters of interest: measure of association   
+2. Method of analysis: chi-square test of independence   
+3. Assumptions of Method: all expected counts greater than 5   
+4. $\alpha$ = 0.05   
+5. H~0~: Classifications are independent = Rogaine does **not** work   
+6. H~a~: Classifications are dependent = Rogaine works  
+7. p = 0.000   
+8. we reject the null hypothesis, there is a statistically significant difference between Rogaine and Placebo, Rogaine works better than the Placebo (or doing nothing) 
+
+**Note** when we made the new table by combining the last two categories I didn't bother to add the row and column names, because the chi.ind.test command doesn't use them anyway. It would of course have been easy to do so:
+
+```{r}
+colnames(new.rogaine.table) <- c("Control", "Treatment")
+rownames(new.rogaine.table) <- c("No Growth", "New Vellus", "Min Growth", "Some Growth")
+new.rogaine.table
+```
+
+###Case Study  : Drownings in Los Angeles
+
+Data is from O'Carroll PW, Alkon E, Weiss B. Drowning mortality in Los Angeles County, 1976 to 1984, JAMA, 1988 Jul 15;260(3):380-3.
+
+Drowning is the fourth leading cause of unintentional injury death in Los Angeles County. They examined data collected by the Los Angeles County Coroner's Office on drownings that occurred in the county from 1976 through 1984. There were 1587 drownings (1130 males and 457 females) during this nine-year period
+  
+```{r, echo=FALSE}
+attach(drownings)
+drownings
+```
+
+Basic Question: **is there a difference between men and women and the method of drowning?** 
+
+First notice that here the data  is already in the form of a table. The "original" data would have been something like this:
+
+Female - Private Swimming Pool  
+Female - Bathtub
+Male - Ocean   
+
+and so on
+
+***Type of variables:***
+
+This is not so trivial, at first glance it seems we have numerical data, but in fact this is already a table, the original ("raw") data was two pieces of information for each subject, namely 
+
+Gender: Values: "Male", "Female" are text, therefore **categorical**
+
+Method: Values: "Private Swimming Pool", .., "Other", are text, therefore **categorical**
+
+two categorical variables &rarr; categorical data analysis
+
+`r hl()$hr()`
+
+Notice also an added difficulty here: at first glance it appears that more than twice as many men drown in Private Swimming Pools than do women (488 vs 219), but remember, there are twice as many men who drowned altogether, so if there were no differences between men and women we would expect twice as men as women to drown in  Private Swimming Pools. What we need to do is calculate the percentages:
+
+```{r}
+round(Male/sum(Male)*100, 1)
+round(Female/sum(Female)*100, 1)
+```
+
+and we see that the difference between men and women who drown in Private Swimming Pools is not very large ($43.2\%$	vs. $47.9\%$)
+
+Notice this was not necessary in the Rogaine data because there the groups Treatment and Control had (almost) the same size (714 and 717). 
+This is often the case in a **designed** experiment, whereas in an **observational** study such the drowning example we often have different sample sizes. 
+
+Generally, using percentages for tables (and graphs) is rarely wrong but using counts can be (and would be here in the drowning experiment) 
+Finally, the test.
+
+```{r}
+chi.ind.test(drownings)
+```
+
+Again we get the warning message. This time it is the Pails, basins, toilets group, which we should combine with the Other: 
+
+```{r}
+newmale <- c(drownings[1:7, 1], 7+40)
+newfemale <- c(drownings[1:7, 2], 4+12)
+newdrown <- cbind(newmale, newfemale)
+newdrown
+chi.ind.test(newdrown) 
+```
+   
+1. Parameters of interest: measure of association  
+2. Method of analysis: chi-square test of independence   
+3. Assumptions of Method: all expected counts greater than 5   
+4. Type I error probability $\alpha$=0.05   
+5. H~0~: Classifications are independent = there is no difference in the method of drowning between men and women.  
+6. H~a~: Classifications are dependent = there is some difference in the method of drowning between men and women.   
+7. p-value = 0.000   
+8. p<$\alpha$, we reject the null hypothesis, there is a statistically significant difference between men and women and where they drown. 
+
+**Note** In this case combining the Pails, .. and the Other category did the trick. But in the Reservoire category there is also a small number (2). We could also have tried to combine that one with Other. Try it to see whether it would have worked! 
+
+###Case Study
+
+A psychologist has developed a new method for treating depression. She wants to know whether it works equally well on men and women. She randomly selects 25 patients and after applying her new treatment she "measures" their level of improvement. She finds:
+
+```{r, echo=FALSE}
+x <- cbind(c(5, 7, 7), c(6, 8, 5))
+colnames(x) <- c("Male", "Female")
+rownames(x) <- c("No Improvement", "Some Improvement", "Improvement")
+knitr::kable(x)
+```
+
+We want to test at the $5\%$ level whether there is a difference between men and women and how the method works.
+
+*Type of variables:*
+
+Gender: Values: "Male", "Female" are text, therefore **categorical**
+
+Method: Values: "No Improvement", "Some Improvement", "Improvement"  are text, therefore **categorical**
+
+two categorical variables $\rightarrow$ categorical data analyis
+
+First we need to get the data into R. In the case of a small table like this the quickest way to do this is to just type it in:
+
+```{r}
+x <- cbind(c(5, 7, 7), c(6, 8, 5))
+```
+
+Notice that for the *chi.ind.test* command we only need the numbers, not the names, so this is enough. 
+
+Now
+
+```{r}
+chi.ind.test(x)
+```
+1. Parameters of interest: measure of association  
+2. Method of analysis: chi-square test of independence   
+3. Assumptions of Method: all expected counts greater than 5   
+4. Type I error probability $\alpha$=0.05   
+5. H~0~: Classifications are independent = there is <B>no</B> difference in the method between men and women.  
+6. H~a~: Classifications are dependent = there is some difference in the method between men and women.   
+7. p-value = 0.7823 
+8. p<$\alpha$, we fail to reject the null hypothesis, there is no statistically significant difference between men and women and how the method works. 
+
+
+###Always be careful with the details
+
+Consider the following two experiments:
+
+**Experiment 1**: we randomy select 200 subjects. For each we record their gender and ask them whether they have ever been accused of a crime. We find</p>
+```{r,echo=FALSE}
+x <-
+structure(list(Gender = c("Male", "Female"), Yes = c(30L, 17L
+), No = c(70L, 83L)), .Names = c("Gender", "Yes", "No"), row.names = c("1", 
+"2"), class = "data.frame")
+knitr::kable(x)
+```
+
+**Experiment 2**: we randomly select 100 men and 100 women and ask them whether they have ever been accused of a crime. We find
+
+```{r,echo=FALSE}
+knitr::kable(x)
+```
+
+Note that the data in both experiments is exactly the same, but they are in fact very different experiments. In experiment 1 the fact that we had 100 men was accidental, it could just as easily have been 104 (say). On the other hand in experiment 2 we decided ahead of time how many men and how many women we want in the study. 
+
+How an experiment is done is always an important consideration. For example, if we wanted to answer the question whether there is a relationship between gender and accused, we could use the chisquare test for experiment 1 but not for experiment 2, at least not in the form presented here. This leads to a whole subfield of statistics called **experimental design**.
+
+For more on the chisquare test for independence see section 12.2 of the textbook.
+

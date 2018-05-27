@@ -1,0 +1,219 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Quantitative Predictor - Quantitative Response: Pearson's Correlation Coefficient
+The method discussed here was originally developed by  [Karl Pearson](http://en.wikipedia.org/wiki/Karl_Pearson)
+
+
+![](graphs/Pearson.jpg)
+
+###Case Study: The 1970's Military Draft
+
+In 1970, Congress instituted a random selection process for the military draft. All 366 possible birth dates were placed in plastic capsules in a rotating drum and were selected one by one. The first date drawn from the drum received draft number one and eligible men born on that date were drafted first. In a truly random lottery there should be no relationship between the date and the draft number.  
+
+[CBS TV Broadcast](https://www.youtube.com/watch?v=-p5X1FjyD_g)
+
+Basic question: **Did the 1970 draft work the way it was supposed to?**
+
+```{r}
+head(draft[, 4:5])
+```
+
+###Type of variables: 
+
+Day of Year : Values: 1, 2, 3, .. ,366 are numerical, therefore **quantitative**
+
+Draft Number.: Values: 305,   159,   251,   215,   ... are numerical, therefore **quantitative**
+ 
+two quantitative variables &rarr; correlation 
+
+`r hl()$hr()`
+
+Whenever we want ot study the relationship between two quantitative variables we should start with the scatterplot. But before we do this, let's consider what we expect to see. The draft was designed as a lottery to make it fair, that is any man in the US should have had the same chance to be picked (or not!). In terms of their birthdays, each of the 365 days should have had the same chance of getting picked early, sometime in the middle or late. So some of the days in January should have a small Draft Number, some a large one and some in the middle. So in the scatterplot on the left (January=small Day number) we should see some dots on the bottom (small Draft) some in the middle and some on top. And exactly the same should be true for any other month: 
+
+```{r}
+attach(draft)
+splot(Draft.Number, Day.of.Year)
+```
+
+so far, so good. 
+
+Now, this graph shows that there is **no obvious** relationship between the variables, but we need a bit more, we want there to be **no relationship**, we want Day of Year and Draft Number to be **independent**. A graph such as this one is not quite enough. So let's calculate a statistic that measures the relationship between two quantitative variables, namely **Pearson's correlation coefficient**:
+
+```{r}
+cor(Draft.Number, Day.of.Year)
+```
+
+Recall some of the properties of Pearson's correlation coefficient:
+- always -1 $\le$ r $\le$ 1 
+  
+- r close to 0 means very small or even no correlation (relationship) 
+  
+- r close to $\pm$ 1 means a very strong correlation 
+  
+- r = -1 or r = 1 means a perfect linear correlation (that is in the scatterplot the dots form a straight line) 
+  
+- r < 0 means a negative relationship (as x gets bigger y gets smaller) 
+  
+- r > 0 means a positive relationship (as x gets bigger y gets bigger) 
+
+- r treats x and y symmetricaly, that is cor(x,y) = cor(y,x) 
+
+r is a **statistic** (a number calculated from a **sample**) so it has a corresponding **parameter** (a number describing a **population**) The parameter is usually denoted by $\rho$. If the lottery worked and was fair, then we should have $\rho=0$. So the question becomes: if r = -0.226 could we still have $\rho=0$? Again this is answered by a hypothesis test:
+
+```{r, message=FALSE, warning=FALSE}
+pearson.cor(Draft.Number, Day.of.Year, rho.null = 0) 
+```
+
+1. Parameter of interest: Pearson's correlation coefficient $\rho$  
+2. Method of analysis: test based on normal theory  
+3. Assumptions of Method: relationship is linear, there are no outliers.
+
+4. $\alpha$ = 0.05  
+5. H~0~: $\rho = 0$ (no relationship between "Day of Year" and "Draft Number")  
+6. H~a~: $\rho \ne 0$ (some relationship between "Day of Year" and "Draft Number")   
+7. p = 0.000  
+8. p < $\alpha$, so we reject H~0~, there is some relationship between "Day of Year" and "Draft Number", something went wrong in the 1970 draft.
+
+How about the assumptions? we can check them using the marginal plot, which looks just fine.
+
+Here are some cases were Pearson's correlation coefficient would not work: 
+
+```{r, echo=FALSE}
+x <- c(1:50, 80, 85)
+y <- x + rnorm(52, 0, 5)
+plt1 <- splot(y, x, return.graph = TRUE)
+y[51:52] <- c(40, 35)
+plt2 <- splot(y, x, return.graph = TRUE)
+y <- x + rnorm(52, 0, 5)
+y[20] <- 60
+plt3 <- splot(y, x, return.graph = TRUE)
+y <- x + rnorm(52, 0, 5)
+y[20] <- 10
+plt4 <- splot(y, x, return.graph = TRUE)
+multiple.graphs(plt1, plt2, plt3, plt4)
+```
+
+Also very important is the fact that Pearson's correlation coefficient works only for **linear relationships**:
+
+```{r, echo=FALSE}
+x <- c(1:50)
+y <- x + rnorm(50)
+plt1 <- splot(y, x, 
+              main_title = paste0("r=", round(cor(x,y), 2)), 
+              return.graph = TRUE)
+y <- x + 0.1*(x-25)^2 + rnorm(50,0,3)
+plt2 <- splot(y, x,  
+              main_title = paste0("r=", round(cor(x,y), 2)), 
+              return.graph = TRUE)
+multiple.graphs(plt1, plt2)
+```
+
+
+
+###App: correlation and correlation2
+
+these apps illustrate the correlation coefficient 
+
+**correlation** What to do: 
+
+Move slider around to see different cases of the scatterplot of correlated variables include a few outliers and see how that effects that "look" of the scatterplot and the sample correlation coefficient 
+On the Histogram  tab set $\rho$ = -0.23 and observe that we need a sample size of about 60 to have some reasonable chance to reject the null hypothesis of no correlation.
+
+**correlation2** What to do
+
+click inside graph and watch the correlation 
+
+`r hl()$hr()`
+
+So, now that we know that there is indeed a relationship between Day of Year and Draft Number, can we visualize it in some way? Here is an idea: let's look at the boxplot of Draft Number by Month:
+
+```{r}
+bplot(Draft.Number, Month, 
+  new_order = "Size")
+```
+
+and here we can see that there is a tendency for the Draft Numbers to be lower for month later in the year. 
+
+**Note**
+
+if we simply run 
+```{r}
+bplot(Draft.Number, Month)
+```
+
+the routine arranges the boxed alphabetically. Here we want them arranged in order. We can always do the graph in any order we want with the new_order argument. 
+
+`r hl()$hr()`
+
+Again notice the similarities and the differences between this analysis and those we have done before: in each case we had the basic question of whether or not there is a relationship between two variables, in each case we did the hypothesis test with the null hypothesis
+
+H~0~: there is **no** relationship
+
+but then we used different methods depending on the type of data:
+
+- Categorical Predictor - Categorical Response: Chi-square test for independence    
+
+- Categorical Predictor  - Quantitative Response: ANOVA  
+
+- Quantitative Predictor - Quantitative Response: Pearson's Correlation Coefficient 
+
+For the last two there are even more similarities: for each of these methods there was some assumption of normal distributions 
+
+###Case Study: The 1971 Military Draft
+
+let's see what happened the year after:
+
+```{r, warning=FALSE}
+splot(Draft.Number.1971, Day.of.Year)
+```
+
+so there is no hint of a problem here (but again, that is what we thought before as well). 
+
+And the test: 
+
+```{r, warning=FALSE, warning=FALSE}
+pearson.cor(Draft.Number.1971, Day.of.Year, rho.null = 0)
+```
+
+1. Parameter of interest: Pearson's correlation coefficient $\rho$  
+2. Method of analysis: test based on normal theory  
+3. Assumptions of Method: relationship is linear, there are no outliers  
+4. $\alpha$=0.05   
+5. H~0~: $\rho$ = 0 (no relationship between "Day 1971" and "Draft Number 1971")   
+6. H~a~: $\rho$ $\ne$ 0 (some relationship between "Day 1971" and "Draft Number 1971")   
+7. p = 0.7861  
+8. p > $\alpha$, so we fail to reject H~0~, there is no relationship between "Day 1971" and "Draft Number 1971 ". 
+The marginal plot shows no outliers or a non linear relationship, so the assumptions are ok. 
+
+`r hl()$hr()`
+
+The same command can also be used to find a confidence interval. This is done when the rho.null argument is left off:
+
+```{r, warning=FALSE}
+pearson.cor(Draft.Number.1971, Day.of.Year, conf.level = 90)
+```
+
+```{r, echo=FALSE}
+detach(draft)
+```

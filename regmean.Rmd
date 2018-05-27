@@ -1,0 +1,136 @@
+---
+header-includes: \usepackage{color}
+output:
+  pdf_document:
+    fig_caption: no
+  html_document: default
+---
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+require(knitr)
+require(ggplot2)
+require(grid)
+```
+`r hl()$basefontsize()`
+
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+#Regression to the Mean
+
+###Case Study: Exam Scores ESMA 3102 
+
+The following graph has the scores of 100 randomly selected students from my recent ESMA 3102 classes
+```{r}
+attach(examscores)
+head(examscores)
+splot(Score, Exam, add.line = 1)
+```
+
+```{r}
+slr(Score, Exam)
+```
+
+Notice the following feature: 
+
+$$
+\text{Exam 2} = 32.1 + 0.466 \text{ Exam 1}
+$$
+
+What does this mean?
+
+Students who did well in the first exam tended to do well also in the second exam ($\beta_1 > 0$) but not as well as in the first one ($\beta_1 < 1$)
+
+Students who did badly in the first exam tended to do badly also in the second exam ($\beta_1 > 0$) but not as badly as in the first one ($\beta_1 < 1$)
+
+**What explains this? Maybe:**
+
+- Students who did well on exam 1 didn't think they had to work so hard on exam 2, so they were lazy?
+
+- Students who did badly on exam 1 knew they had to work  harder on exam 2?
+
+- Other arguments?
+
+Maybe, but maybe this is just
+
+`r hl()$fontcolor("Regression to the Mean")`
+
+The principle of regression to the mean was first described by [Sir Francis Galton](http://en.wikipedia.org/wiki/Francis_Galton"), one of the great scientists in history and one of the first 
+statisticans (he also invented the term correlation). In one of his studies he measured the heights of 982 children and their parents (actually, fathers and sons).
+
+```{r}
+attach(galton) 
+splot(Child, Midparent,  add.line=1, jitter=TRUE)
+```
+
+Note that I "jittered" the data a bit because Galton measured the heights ot the nearest half inch, so there are a lot of repetitions.
+
+Again we find:
+
+```{r}
+slr(Child, Midparent)
+```
+
+and so $0 < \beta_1 < 1$, which implies:
+
+- sons of tall fathers are tall, but not as tall as their fathers.
+
+- sons of small fathers are small, but not as small as their fathers.
+
+And that is a good thing! (??)
+
+Galton actually invented the term **regression to the mean** for this phenomena: extremes tend to *regress* (return) to the overall average. 
+
+Regression to the mean  is one of the most missunderstood principles of statistics. There is always a tendency to look for a reason for this return to the average (student who did well on first exam got lazy and so did worse on second exam). 
+
+Here is a general description of when and how regression to the mean happens:
+
+a) there is an "experiment" that results in a "score"
+
+b) the scores are due in part to "skill" and in part to luck 
+
+c)  the "high scorers" are "selected" and repeat the experiment
+
+d) they still have the "skill" but will they again have the luck? certainly not all of them
+
+**Example** Students take tests
+
+  a) "experiment" = take a test  
+  b) "skill" = student knows material (or not), luck: gets question they just studied, make a lucky guess   
+  c) repeat the experiment = take another test  
+  d) the good students will do good again, but some will not be lucky again  
+  
+**Example** Heights of fathers and sons 
+
+  a) "experiment" = a father's height is measured  
+  b) "skill" = genetics, luck=randomness in how someones height  
+  c) let's concentrate on those who are tall, repeat the experiment = consider their sons  
+d) they are still tall (because of genetics) but not as tall (because they did not get as "lucky" as their fathers)  
+
+
+**Example** Traffic lights installed at an intersection after a series of accidents 
+
+a) "experiment" = how many accidents are there in some intersection?   
+b) "skill" = some intersections are more dangerous than others, luck = the number of accidents on any one intersection will fluctuate randomly.  
+c) repeat the experiment = see how many accidents happen now  
+d) the lights will help prevent accidents, but likely there would not have been as many anyway. 
+
+Note that this does not say that there is no effect here, just that it may not be as great as it appears. 
+
+**Example** Students: there are students who really know the material
+
+**Example** Heights: genetics 
+
+**Example** traffic lights: they do prevent accidents (mostly) 
+
+One feature of regression to the mean is that it works both ways: change "high" for "low" above and everything is still true. 
+
+
+```{r, echo=FALSE}
+detach(examscores)
+detach(galton)
+```
+

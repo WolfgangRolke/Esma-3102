@@ -1,0 +1,152 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+
+##Categorical Predictor - Categorical Response
+
+In the case of two categorical variables knowing that they are somehow related is usually enough, beyond that one simply considers the percentages.
+
+##Categorical Predictor - Quantitative Response
+
+
+The case of a categorical predictor with 2 groups and a quantitative response is done -  the two groups are different. The only other thing one might do is find a confidence interval for the differences in means, see 2-sample t method. 
+
+###Case Study: Mothers Cocain Use and Babies Health
+
+we have previously run the ANOVA and found that there are differences between the lengths of the babies of different groups. We can go a step further, though and ask the following questions:
+
+- is there a difference between the Drug Free and the First Trimester group?
+
+- is there a difference between the First Trimester and the Throughout group?
+
+in other words, we can try to study the **pairwise differences**, which is an example of a **multiple comparison** study.
+
+As we said before we could do this by running the 2 sample t test on each pair, but then we would be doing **simultaneous inference**. What we need is a method that does this but in such a way that the overall type I error probability is the desired $\alpha$, no matter how many tests are done. R has a number of such methods implemented, we will use the one due to [John Tukey](http://en.wikipedia.org/wiki/John_Tukey), one of the founders of modern Statistics
+
+![](graphs/Tukey.jpg)
+
+```{r, message=FALSE}
+attach(mothers) 
+tukey(Length, Status)
+```
+
+What does this tell us? To find out we first need to see the groups in the order of their means. We already know this here but in general a nice command to get that is
+
+```{r}
+stat.table(Length, Status, Sort=TRUE)
+```
+
+Now we are told that the only stat. significant difference is between Drug free and Throughout, so of course
+
+- the difference between Drug Free and First Trimester is NOT stat. significant
+
+- the difference between First Trimester and Throughout is NOT stat. significant
+
+BUT: most importantly we need to remember the difference between *failing to reject H~0~* and *accept H~0~*, so this does NOT say that there is no stat. significant difference between (say) Drug Free and First Trimester (why not?)
+
+so now we have the following interpretation: 
+
+There is a stat. signif. difference between the mean lengths of the babies of Drug Free mothers and those who took cocain throughout the pregnancy. Other differences are not stat. signif., at least not at these sample sizes
+
+**Note ** It is theoretically possible that the oneway command find a statistically singificant difference, but Tukey does not, and vice versa! What you want to do is this:
+run the oneway command  
+
+- If it DOES NOT reject the null of some differences, DO NOTHING  
+
+- If is DOES reject the null, run tukey. 
+
+###Case study: Cuckoo Eggs
+
+That cuckoo eggs were peculiar to the locality where found was already known in 1892. A study by E.B. Chance in 1940 called The Truth About the Cuckoo demonstrated that cuckoos return year after year to the same territory and lay their eggs in the nests of a particular host species. Further, cuckoos appear to mate only within their territory. Therefore, geographical sub-species are developed, each with a dominant foster-parent species, and natural selection has ensured the survival of cuckoos most fitted to lay eggs that would be adopted by a particular foster-parent species. The data has the lengths of cuckoo eggs found in the nests of six other bird species (drawn from the work of O.M. Latter in 1902).
+
+![](graphs/cuckoo.jpg)
+
+Basic question: is there a difference between the lengths of the cuckoo eggs of different Foster species?
+
+```{r, message=FALSE}
+attach(cuckoo)
+head(cuckoo)
+table(Bird)
+bplot(Length, Bird, new_order = "Size")
+```
+
+where we ordered the boxes by size because the categorical variable here has no obvious ordering.
+
+we have some outliers in the Meadow Pipit species, but not to bad and we will ignore that.
+
+Let's look at the table of summary statistics. 
+
+```{r}
+stat.table(Length, Bird, Sort=TRUE)
+```
+
+Both the graph and the table make it clear that there are some differences in the length, so the following is not really necessary:
+
+```{r}
+oneway(Length, Bird)
+```
+
+1) Parameters of interest: group means  
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) $\alpha = 0.05$  
+5) Null hypothesis H~0~: $\mu_1 = ... = \mu_6$ (groups have the same means)  
+6) Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (at least two groups have different means)  
+7) p value = 0.000  
+8) 0.000 < 0.05, there is some evidence that the group means are not the same, the length are different for different foster species. 
+
+Assumptions of the method:  
+
+a) residuals have a normal distribution, plot looks ok  
+
+b) groups have equal variance  
+
+smallest stdev=0.7, largest stdev=1.1, 3*0.7=2.1>1.1, ok
+
+So, how exactly do they differ?
+
+```{r}
+tukey(Length, Bird)
+```
+
+so the eggs of Wrens are the smallest, and they are stat. significantly smaller than the eggs of all other birds.
+
+Meadow Pipits are next, and they are stat. significantly smaller than the eggs of Tree Pipits and Hedge Sparrows.
+
+no other differences are stat. significant!
+
+`r hl()$hr()` 
+
+On occasion one might want to see the p values of all the pairwise comparisons, for example if one wants to use an $\alpha$ different from $0.05$:
+
+```{r}
+tukey(Length, Bird, show.all = TRUE)
+```
+
+Notice that the pairs in tukey are also in the order from smallest to largest: first comes Meadow Pipit - Wren, the two birds with the smallest mean lengths. 
+
+
+```{r, echo=FALSE}
+detach(mothers)
+detach(cuckoo)
+```

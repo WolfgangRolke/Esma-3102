@@ -1,0 +1,333 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Methods for Univariate Data
+
+##Population Mean
+
+The R command for testing and to find confidence intervals for a population mean $\mu$ is *one.sample.t*. The assumptions for this method are: either the data comes from a normal distribution or the sample size is large enough.
+
+###Case Study: Resting Period of Monarch Butterflies
+
+![](graphs/monarch.jpg)
+
+Some Monarch butterflies fly early in the day, others somewhat later. After the flight they have to rest for a short period. It has been theorized that the resting period (RIP) of butterflies flying early in the morning is shorter because this is a thermoregulatory mechanism, and it is cooler in the mornings. The mean RIP of all Monarch butterlfies is 133 sec. Test the theory at the 10% level.
+
+Research by Anson Lui, Resting period of early and late flying Monarch butterflies Danaeus plexippus, 1997
+
+A)  find a 90% confidence interval for the mean length of the flight times.
+
+First we check the assumptions: 
+
+```{r}
+attach(butterflies)
+sort(RIP.sec.)
+```
+
+```{r}
+nplot(RIP.sec.) 
+```
+
+The graph shows that the data comes from a normal distribution.
+
+```{r, fig.show='hide'}
+one.sample.t(RIP.sec., conf.level = 90)
+```
+
+
+**Note** the one.sample.t command does the normal plot automatically.
+
+`r hl()$vspace()` 
+ 
+B) test at the 5% level whether the true mean resting period is less than 133 minutes.
+
+```{r fig.show='hide'}
+one.sample.t(RIP.sec., mu.null = 133, alternative = "less")
+```
+
+1) Parameter of interest: population mean 
+2) Method of analysis: one sample t 
+3) Assumptions of Method: normal data or large sample 
+4) $\alpha = 0.05$  
+5) H~0~: $\mu = 133$  
+6) H~a~: $\mu < 133$  
+7) p = 0.0558  
+8) $p > \alpha$, we fail to reject the null hypothesis, the waiting time might well be 133 minutes.
+
+`r hl()$vspace()`
+
+C) for the test in B) what was the power of the test if the true resting period is 125 minutes?
+
+We have the routine t.ps for power and sample size calculations:
+
+```{r}
+t.ps(n = 40, diff = 125-133, sigma = sd(RIP.sec.),
+     alternative="less")
+```
+
+**Note** for this method the actual values of 125 and 133 are irrelevant, only the difference 125-133 matters!
+
+**Note** the argument name for the standard deviation is sigma because ideally we would want this to be the **population** standard deviation. In practice we often only have the **sample** standard deviation, though. Usually that is ok.
+
+**Note** The routine doesn't just find the power for the given diff but does a whole curve, for lots of differences!
+
+`r hl()$vspace()`
+
+D) If the true resting period is 125 minutes and we tested at the 10% level, what sample size would be needed for the test to have a power of 90%? 
+
+The same command will find the sample size if we give it the required power, and leave the sample size n out:
+
+```{r}
+t.ps(power = 90, diff = 125-133, sigma = sd(RIP.sec.),
+     alternative="less")
+```
+
+###Case Study: Educational Achievements
+
+A sociologist wants to study the educational level in some population. She randomly selects 120 people and asks them for their education, specifically the number of years (for example, someone who finishes high school is a 12 and someone with a bachelors degree a 16). She finds a mean of 12.3 with a standard deviation of 1.7. She wants to find a $90\%$ confidence interval for the population mean.
+
+Here we don't have the data itself, but the information given is all we need:
+
+```{r}
+one.sample.t(y=12.3, shat=1.7, n=120, conf.level=90)
+```
+
+**Note** One problem with this situation is that without the data we can not do a normal plot and verify that the data came from a normal distribution. 
+
+`r hl()$vspace()`
+
+If she wanted the interval to have an error of 0.2, what sample size would she need?
+
+```{r}
+t.ps(E=0.2, sigma=1.7, conf.level=90)
+```
+
+##Population Proportion (Percentage / Probability)
+
+**Note**: proportion = probability = percentage/100
+
+The R command for testing and to find confidence intervals for a population proportion $\pi$ is *one.sample.prop*. This method has **no** assumptions!
+
+###Case Study: John Kerrichs Coin 
+
+The South African mathematician [John Kerrich](https://en.wikipedia.org/wiki/John_Edmund_Kerrich) was in a German POW camp during World War II. During his time there he flipped a coin 10000 times, getting 5067 heads and 4933 tails.
+
+`r hl()$vspace()`
+
+A) Test at the 5% level of significance whether 5067 heads in 10000 flips are compatible with a fair coin.
+
+```{r}
+one.sample.prop(x=5067, n=10000, pi.null=0.5)
+```
+
+1) Parameter: proportion $\pi$  
+2) Method: exact binomial  
+3) Assumptions: None  
+4) $\alpha = 0.05$ 
+5) H~0~: $\pi = 0.5$ (50% of flips result in "Heads", coin is fair) 
+6) H~a~: $\pi \ne 0.5$ (coin is not fair) 
+7) p = 0.1835 
+8) p = 0.1835 > 0.05, so we fail to reject the null hypothesis, it appears John Kerrich's coin was indead fair. 
+
+**Note** problems for proportions do not include a standard deviation $\sigma$. (actually, they do, but it is "included" in the $\pi$)
+
+`r hl()$vspace()`
+
+B) If the true probability of heads for his coin was 0.505, what would have been the power of the test?
+
+for power and sample size calculations for percentages/proportions/probabilities we have the prop.ps command: 
+
+```{r}
+prop.ps(n=10000, phat=0.505, pi.null=0.5)
+```
+
+**Note** that in the case of a proportion we need both phat and pi.null, not just the difference.
+
+```{r, eval=FALSE}
+prop.ps(n=100, phat=0.5, pi.null=0.6)
+```
+```{r, echo=FALSE}
+paste0("Power of Test = 53.7%")
+```
+```{r, eval=FALSE}
+prop.ps(n=100, phat=0.6, pi.null=0.5)
+```
+```{r, echo=FALSE}
+paste0("Power of Test = 46.0%")
+```
+
+`r hl()$vspace()`
+
+C) If the true probability of heads for his coin was 0.505, how often would he have had to flip the coin so that the chance for rejecting the null would have been 90%?
+
+```{r}
+prop.ps(phat=0.505, pi.null=0.5, power=90)
+```
+
+###Case Study: Failure Rates
+
+The Professors of some course are worried about the failure rates (F's and W's) in some course. They are planning to randomly select students from the last few years and then find a 99% confidence interval for the failure rate. What sample size will they need if they want the interval to have an error of $7.5\%$?
+
+```{r}
+prop.ps(E=0.075, conf.level=99)
+```
+
+**Note** here we didn't mention phat. In that case prop.ps will use phat=0.5:
+
+
+```{r}
+prop.ps(E=0.075, phat=0.5, conf.level=99)
+```
+
+
+Say they know that the failure rate is around $40\%$, what would the sample size be then?
+
+```{r}
+prop.ps(phat=0.4, E=0.075, conf.level=99)
+```
+
+**Note** with phat=0.5 we get 295, with phat=0.4 it is n=284. In fact phat=0.5 will always yield a sample size larger than for any other phat. A larger sample size is always safer (yield a smaller confidence interval).
+
+###Case Study: Election polling
+
+When you read the results os an election poll it often says that the poll has *a margin of error of $\pm 3\%$*. This means that the error of the confidence interval is 0.03. 
+
+In the next election for governor of Puerto Rico, what sample size will be needed in a poll to have an error of $\pm 3\%$?
+
+```{r}
+prop.ps(E=0.03)
+```
+
+In the next election for president of the US, what sample size will be needed in a poll to have an error of $\pm 3\%$?
+
+```{r}
+prop.ps(E=0.03)
+```
+
+Whu is this quite remarkable?
+
+##Pearson Chisquare Goodness-of-Fit Test
+
+This test compares proportions from a sample with proportions from a population. The test has the assumption that all expected counts be at least five. 
+
+###Case Study: Rolling a fair die
+
+In order to test whether a certain die is fair it was rolled 100 times. The results were
+```{r, echo=FALSE}
+x  <- c(12, 17, 20, 15, 10, 26)
+p <- rep("1/6", 6)
+kable(data.frame(x=x, p=p))
+```
+
+Let's enter the data in R and run the test:
+
+```{r}
+x  <- c(12, 17, 20, 15, 10, 26)
+p <- c(1, 1, 1, 1, 1, 1)/6
+chi.gof.test(x, p)
+```
+$p = 0.0741  > 0.05 = \alpha$, so we fail to reject the null, the die does not appear to loaded. 
+ 
+###Case Study: Gregor Mendels Genetic Experiments
+
+*Experiments in Plant Hybridization (1865)* by Gregor Mendel is one of the most famous papers in all of Science. His theory of genetics predicted that the number of Smooth yellow, Wrinkled yellow, Smooth green and Wrinkled green peas would be in the proportions 9/16, 3/16, 3/16 and 1/16. In one of his experiments he oberved 315, 101, 108 and 32. Does this agree with his theory?
+```{r}
+x  <- c(315, 101, 108 , 32)
+p  <- c(9, 3, 3, 1)/16
+chi.gof.test(x, p)
+```
+$p = 0.9254> 0.05$, the data from the experiment is in agreement with Mendel's theory.
+
+###Case Study: Eggs of Birds
+
+a biologist has a theory regarding the number of eggs laid by a certain species of birds. He does a survey of these birds and finds:
+
+```{r, echo=FALSE}
+xp <- data.frame( c("0", "1", "2", "3", "More than 3"),
+  c(15, 24, 8, 11, 4), 
+  c(25, 30, 20, 20,5))
+colnames(xp) <- c("Number of Eggs","Observed","Theory (in%)")
+knitr::kable(xp)
+```
+
+Test at the 5% level whether his data agrees with his theory
+
+```{r}
+x <- c(15, 24, 8, 11, 4)
+p <- c(25, 30, 20, 20, 5)/100
+chi.gof.test(x, p)
+``` 
+
+Notice the warning regarding the expected counts < 5. This is because the last category doesn't have enough data. The solution is to combine some categories:
+
+```{r, echo=FALSE}
+xp <- data.frame( c("0", "1", "2", "More than 2"),
+  c(15, 24, 8, 11+4), 
+  c(25, 30, 20, 20+5))
+colnames(xp) <- c("Number of Eggs","Observed","Theory (in%)")
+knitr::kable(xp)
+```
+```{r, echo=FALSE}
+x <- c(15, 24, 8, 11+4)
+p <- c(25, 30, 20, 20+5)/100
+```
+
+Now rerun that test
+
+```{r}
+x <- c(15, 24, 8, 11+4)
+p <- c(25, 30, 20, 20+5)/100
+chi.gof.test(x, p)
+``` 
+```{r, echo=FALSE}
+detach(butterflies) 
+```
+
+###Coin Flipping
+
+you flip a coin 100 times and get 60 heads. Test at the 5% level whether this is a fair coin.
+
+Solution A:
+
+each flip is either "heads"" or "tails", so it is a Bernoulli trial. Therefore we can use 
+
+```{r}
+one.sample.prop(60, 100, pi.null = 0.5)
+```
+
+$p > \alpha$, so we fail to reject the null hypothesis.
+
+Solution B:
+
+We can use the chisquare goodness-of-fit test:
+
+```{r}
+x <- c(40, 60)
+p <- c(0.5, 0.5)
+chi.gof.test(x, p)
+```
+
+$p < \alpha$, so we reject the null hypothesis.
+
+What is going on? To begin with, both methods are perfectly ok. They are not the same methods, so we should not expect them to give the (exactly) same answer. Also, in either case the p values are close to 0.05, in which case one should not really either reject or fail to reject the null hypothesis but if possible collect more data. 
+               

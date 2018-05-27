@@ -1,0 +1,317 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Coefficient of Determination and  Overfitting
+
+###Case Study: Predicting the Usage of Electricity
+
+
+In Westchester County, north of New York City, Consolidated Edison bills residential customers for electricity on a monthly basis. The company wants to predict residential usage, in order to plan purchases of fuel and budget revenue flow. The data includes information on usage (in kilowatt-hours per day) and average monthly temperature for 55 consecutive months for an all-electric home. Data on consumption of electricity and the temperature in Westchester County, NY.
+ 
+```{r}
+attach(elusage) 
+head(elusage)
+splot(Usage, Temperature)
+```
+
+The scatterplot does not look all that bad but running the regression and checking the residual vs.fits plot shows that a linear model is not good for this dataset:
+
+```{r}
+slr(Usage, Temperature, RFplot = TRUE) 
+```
+
+In our current discussion we are concerned with the shape of the model only. The other assumptions (normal residuals and equal variance) we can worry about only after we have a good model. So for the time being I will only print the residual vs. fits plot.
+
+so let's try the transformations:
+
+1) exponential model (log of y vs x)
+
+```{r}
+slr(log(Usage), Temperature, RFplot = TRUE)
+```
+
+does not look bad
+
+2) y vs log x  
+
+```{r}
+slr(Usage, log(Temperature), RFplot = TRUE) 
+```
+
+does not look bad
+
+3) power model (log of y vs log of x)  
+
+```{r}
+slr(log(Usage), log(Temperature), RFplot = TRUE) 
+```
+
+does not look bad
+
+What do we do now? All three of the transformations have a good residual vs fits plot, and so are good models. But which one is best? 
+
+We can choose using the
+
+##Coefficient of Determination $R^2$
+
+Say we are have two "good" models. How can we decide which is better? One measure of "quality of fit" is $R^2$, the **Coefficient of Determination**. It is defined as 
+
+$$
+R^2 = \text{cor}(\text{Observed Values, Predicted Values})^2 100\%
+$$
+
+This definition immediately leads us to the following properties $R^2$:
+
+- $R^2=0$: no relationship between observed and predicted values. 
+
+- $R^2=100$: perfect relationship between observed and predicted values. 
+
+- $R^2$ of model A is greater than $R^2$ of model B, then model A is better than model B.
+
+$R^2$ is part of the output of the slr routine. 
+
+##r and $R^2$
+
+If the relationship is linear there is a close connection between Pearson's correlation coefficient and $R^2$: 
+
+$$
+R^2 = (r)^2100\% 
+$$
+
+**Example** Draft data:
+
+```{r}
+detach(elusage)
+```
+
+```{r fig.show='hide'}
+attach(draft)
+cor(Draft.Number, Day.of.Year)
+slr(Draft.Number, Day.of.Year, return.result = TRUE)
+```
+
+$$
+r^2 * 100 \% =(- 0.226)^2*100 \% = 0.051*100\%  = 5.1 \% = R^2
+$$
+
+The big advantage of $R^2$ is that it also works if the relationship is not linear, whereas Pearsons's correlation coefficient does not.
+
+`r hl()$hr()`
+
+```{r, echo=FALSE}
+detach(draft)
+attach(elusage)
+```
+
+
+Back to the electricity data. We find 
+
+- exponential model $R^2=80.6\%$
+
+- y vs log x model $R^2=82.9\%$
+
+- power model $R^2=81.1\%$
+
+so the y vs. log x model is best.
+
+But how about a polynomial model? Unfortunately we cannot use $R^2$ to choose between two polynomial models, say the quadratic and the cubic model, because the model with the higher power will never have a smaller $R^2$! For example a cubic model can **never** give a worse fit than the quadratic model. 
+
+**Example**: Elusage:
+
+| Model | $R^2$ |
+| --- | --- |
+|Linear | $78.05\%$  | 
+|Quadratic | $84.67\%$ |   
+|Cubic | $84.72\%$  |
+| ... | ... |
+|power 10 | $\ge 84.72\%$|
+
+The reason for this is simple: Say we find the best quadratic model, which is
+$$
+\text{Usage} = 196.7 - 4.640\text{ Temperature} + 0.03073\text{ Temperature}^2
+$$
+
+Now we add the cubic term Temperature^3^ as a predictor. One (of many) cubic models is
+
+$$
+\text{Usage} = 196.7 - 4.640\text{ Temperature} + 0.03073\text{ Temperature}^2+ 0.0\text{ Temperature}^3
+$$
+
+this is of course the same as the quadratic model above, so it has $R^2=84.67\%$. Only the least squares cubic model is the **best** cubic model, so it's $R^2$ cannot be smaller (and because of statistical fluctuation usually will be even a bit higher, even if the cubic term is not necessary). 
+
+###Question: which of these polynomial models should you use?
+
+####Linear Model
+
+```{r, echo=FALSE}
+x <- 0:10/10
+set.seed(1)
+y <-  x + 30*x^2  + rnorm(11, 0, 1.5)
+out <- slr(y, x, return.result = TRUE)
+splot(y, x, add.line = 1)
+```
+
+####Quadratic Model
+
+```{r, echo=FALSE}
+out <- slr(y, x, polydeg=2, return.result = TRUE)
+flplot(y, x, polydeg=2)
+```
+
+####Cubic Model
+
+```{r, echo=FALSE}
+out <- slr(y, x, polydeg=3, return.result = TRUE)
+flplot(y, x, polydeg=3)
+```
+
+#### Power 11 Model
+
+```{r, echo=FALSE}
+#out <- slr(y, x, polydeg=4, return.result = TRUE)
+cf <- c(-0.939680715799193, 293.516759715529, -5298.88525575428, 
+30314.570804457, -29980.1018628968, -329363.012342885, 1491426.03770074, 
+-2906877.46266628, 3025992.97750815, -1643089.4892805, 366616.055987719
+)
+plt <- splot(y, x, return.graph = TRUE)
+x <- seq(0, 1,  length=250)
+y <- rep(cf[1], 250)
+for(i in 2:11) y <- y+cf[i]*x^(i-1)
+plt + geom_line(aes(x,y), colour="blue",size=1.2, data=data.frame(x=x, y=y))
+```
+
+and this one is perfect, it has $R^2=100\%$.
+
+Actually, it is **always** possible to find a polynomial model which fits the data set perfectly, that is it has $R^2=100\%$!
+
+But: we want our models to fit the relationship, not the random fluctuations in the dataset.
+
+A model should be **parsimoneous**, that is as simple as possible.
+This is in agreement with one of the fundamental principles of science:
+
+**Ockham's razor**, named after [William of Ockham](http://en.wikipedia.org/wiki/William_of_Ockham)
+
+![](graphs/ockham.jpg)
+
+Ockham's razor is the principle that "entities must not be multiplied beyond necessity" (entia non sunt multiplicanda praeter necessitatem). The popular interpretation of this principle is that the **simplest explanation is usually the correct one**.
+  
+For our problem this means: Use the polynomial model of **lowest degree** that can't be improved statisticaly significantly by adding another power.
+
+Let's consider again the quadratic and the cubic models:
+
+```{r fig.show='hide'}
+slr(Usage, Temperature, polydeg = 2, ndigit = 5)
+slr(Usage, Temperature, polydeg = 3, ndigit = 5)
+```
+
+So the cubic model is better than the quadratic one (in terms of R^2^), but is it statistically significantly better? Here is a test:
+
+```{r}
+quad.model <- slr(Usage, Temperature, polydeg = 2, return.model = TRUE)
+cube.model <- slr(Usage, Temperature, polydeg = 3, return.model = TRUE)
+nested.models.test(quad.model, cube.model)
+```
+
+and so the answer is no, the cubic is not better. So we should use the quadratic one!
+
+`r hl()$hr()`
+
+`r hl()$fontcolor("Warning")` as always a GOOD MODEL is one with a good residual vs. fits plot. It can happen that both the quadratic and the cubic are bad models and this test fails to reject the null because they are equally bad!
+
+`r hl()$hr()`
+
+**Note**: if we have two models, one of which is a special case of the other, we say we have *nested* models. 
+
+**Example**: quadratic and cubic
+
+**Example**: y vs x and y vs x, z 
+
+In all of those cases the model with more predictors will NEVER have a smaller $R^2$, so using $R^2$ would always lead to the model with all the terms, which may not be best. 
+
+##Choosing between good Models
+
+In choosing the best model (from our short list) proceed as follows:
+Model is "good" = no pattern in the Residual vs. Fits plot
+
+1. If a linear model is good, use it, **you are done**  
+
+If the linear model is not good, proceed as follows
+
+2. check the transformation models and see which of these (if any) are good.
+
+3. find the best polynomial model using method described above.
+
+4. Choose as the best of the **good** models in 2) and 3) the one which has the highest $R^2$.
+
+Back to Electricity usage. We have found:
+
+- best transformation model is y vs log of x  with $R^2=82.9\%$
+
+- best polynomial model is the quadratic with $R^2=84.7\%$
+
+- so best overall is quadratic.
+
+**An important comment**
+
+Having a high $R^2$ is desirable, but neither necessary for a model to be good, nor an indication that a model is good:
+
+**Example** 1970's draft data:
+
+```{r, echo=FALSE}
+detach(elusage)
+attach(draft)
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+slr(Draft.Number, Day.of.Year, RFplot = TRUE)
+```
+
+the linear model is a good one, even though it has a very low $R^2=5.1\%$
+
+**Example** fabric wear data:
+
+```{r, warning=FALSE}
+attach(fabricwear)
+slr(Wear, Speed, RFplot = TRUE )
+```
+
+the linear model is bad, even though it has a fairly high $R^2=88.6\%$
+
+###Case Study: Fabric Wear
+
+For this data set we have seen previously that none of the log transformations work. How about the polynomial models?
+
+```{r}
+quad.model <- slr(Wear, Speed, polydeg = 2, return.model = TRUE)
+cube.model <- slr(Wear, Speed, polydeg = 3, return.model = TRUE)
+nested.models.test(quad.model, cube.model)
+```
+
+and so the cubic model is not better than the quadratic model. So we should use the quadratic one!
+
+
+```{r, echo=FALSE}
+detach(fabricwear)
+detach(draft)
+```

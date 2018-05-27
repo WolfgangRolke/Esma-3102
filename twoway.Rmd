@@ -1,0 +1,452 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Two  Categorical Predictors - One Quantitative Response 
+
+###Case Study: Testing Hearing Aids
+
+Reference: Loven, Faith. (1981). A Study of the Interlist Equivalency of the CID W-22 Word List Presented in Quiet and in Noise. Unpublished MS Thesis, University of Iowa.
+
+Description: Percent of a Standard 50-word list heard correctly in the presence of background noise. 24 subjects with normal hearing listened to standard audiology tapes of English words at low volume with a noisy background. They repeated the words and were scored correct or incorrect in their perception of the words. The order of list presentation was randomized.
+
+The word lists are standard audiology tools for assessing hearing. They are calibrated to be equally difficult to perceive. However, the original calibration was performed with normal-hearing subjects and no noise background. The experimenter wished to determine whether the lists were still equally difficult to understand in the presence of a noisy background.
+
+```{r}
+head(hearingaid)
+```
+
+**Notice** that the values in both Subject and List are NOT numbers but labels, so both of them are categorical!
+
+As long as we have one quantitative response (Score) and all the predictors (factors) are categorical (Subject, List) this is still an ANOVA problem, now called a **twoway ANOVA **More specifically, this is a **Randomized Block design **with List as the factor and Subject as a blocking variable.
+
+```{r}
+attach(hearingaid) 
+bplot(Score, List, new_order = "Size")
+bplot(Score, Subject, new_order = "Size")
+```
+
+The summary statistics are:
+
+```{r}
+stat.table(Score, List, Sort = TRUE) 
+```
+
+Because Subject is the blocking variable one would normally not include a table of summary statistics.
+
+Now for the test, or better tests, because we can in general test for either Subject or List. The routine we will use is called twoway:
+
+```{r}
+twoway(Score, List, Subject) 
+```
+
+So we have two tests, one for List and one for Subject. However, only the one for List is of interest:
+
+1) Parameters of interest: List group means    
+2) Method of analysis: ANOVA   
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) Type I error probability $\alpha=0.05$    
+5) Null hypothesis H~0~: $\mu_1 = .. =\mu_4$ (List groups have the same means)  
+6) Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (at least two List groups have different   means)   
+7) p value=0.00   
+8) 0.000<0.05, there is some evidence that the group means are not the same, that List means are different)  
+
+As always we need to check the assumptions. The normal plot of residuals looks fine.
+
+Next the equal variance. In a oneway ANOVA we could just find the group standard deviations and compare them. Now (and in general if there are more than 1 factor) this is no longer a good idea mainy because there are to many factor level combinations (4*24 here ) and not enough observations for each (1 here). Instead we will do the same as in the regression case, namely check the residual vs. fits plot for a change in spread from left to right. 
+  
+again, everything looks fine.
+
+Notice that the ANOVA table also has the test for the Subject means. This is not very interesting, the boxplot already makes it clear that different subjects have very different hearing abilities. If that were not so, we would eliminate Subject and run a oneway ANOVA.
+Because we now have two factors, we need to worry about an additional problem, namely whether or not there is a relationship between the two factors. This is called 
+
+##Interaction
+
+To do so we will check the **interaction plot**
+ 
+An interaction plot looks as follows:
+ 
+```{r, echo=FALSE}
+A <- rep(1:2, 30)
+B <- rep(1:3, each=20) 
+set.seed(5)
+y <- round(10 + A + ifelse(B==3, 2, B) + rnorm(60), 2)
+iplot(y, B, A)
+```
+
+Here the line segments are allmost parallel. This implies that for any value of the factor A going from one value of B to the next adds **the same** amount to the response. So if we go from B=1 to B=2 **both** lines move up by about 2.0, and if we go from B=2 to B=3 **both** lines move down by 0.75.
+
+Because of this we call such a model **additive**
+
+Now consider the following interactions plot:
+```{r, echo=FALSE}
+A <- rep(1:2, 30)
+B <- rep(1:3, each=20)
+set.seed(3)
+y <- round(10 + A + B + ifelse(A==1, 1, -1)*B + rnorm(60), 2)
+iplot(y, B, A)
+```
+
+Here as we go from B=2 to B=3 the line goes up by 4 **if A=1** but it goes down by 0.5 **if A=1**.
+
+Here is another way of understanding the difference: Say you are told that you have an additive model and the following information:
+
+```{r, echo=FALSE}
+out <- cbind(c(2.3, 2.7), c(3.1, "?"))
+colnames(out) <- c("Low", "High")
+rownames(out) <- c("In", "Out")
+kable(out)
+```
+
+Can we make a guess for the response if Factor 1 = "high" and Factor 2 = "out"? We see that if Factor 2 = "in" and going from "low" to "high" the response goes up by 0.4 (=2.7-2.3). In an additive model that means the response should go up the **same amount** for Factor 2 = "out", that is it should go to 3.5 (=3.1+0.4).
+
+But if there were interaction there would be no way to make any guess at all!
+
+Deciding from the graph whether or not there is interaction is not always easy. Here are four interaction plots from a simulated data set, all guaranteed NOT to have any interaction:
+
+```{r, echo=FALSE}
+A <- rep(1:2, 3)
+B <- rep(1:3, each=2)
+y <- round(10 + A + B + rnorm(6), 2)
+plt1 <- iplot(y, B, A, return.graph = TRUE)
+y <- round(10 + A + B + rnorm(6), 2)
+plt2 <- iplot(y, B, A, return.graph = TRUE)
+y <- round(10 + A + B + rnorm(6), 2)
+plt3 <- iplot(y, B, A, return.graph = TRUE)
+y <- round(10 + A + B + rnorm(6), 2)
+plt4 <- iplot(y, B, A, return.graph = TRUE)
+multGraph(plt1, plt2, plt3, plt4)
+```
+
+This is even worse because in ANOVA problems we often have very small data sets, so there is a great amount of variation in these graphs from sample to sample.
+
+So it would be nice if we could actually test for interaction, but that requires **repeated measurements**.
+
+In the hearing aid data we only have one observation for each combination of Subject and List, so we need to decide on the basis of the interaction plot:
+```{r}
+iplot(Score, List, Subject )
+```
+There seems to be interaction between Lists and Subjects
+
+Finally, it would of course be interesting to study just which lists are different, that is we could do a **multiple comparison**:
+
+```{r}
+tukey(Score, List, Subject, which="first")
+```
+
+so List 1 is statistically sigifcantly different from Lists 3 and 4. 
+
+No other differences are statistically significant.
+
+Because Subject is only a blocking variable we would not due a multiple comparison for it if we wanted to we would use the command
+```{r}
+tukey(Score, List, Subject, which="second")
+```
+
+###Case Study: Gasoline Type and Milage
+
+In an experiment to study gas milage four different blends of gasoline are tested in each of three makes of automobiles. The cars are driven a fixed distance to determine the mpg (miles per gallon) The experiment is repeated three times for each blend-automobile combination. (Taken from Lyman Ott)
+  
+Note that the interest here is indifferent gasoline blends, automobile is a blocking variable, so this is a randomized block design.
+
+Gasoline is numbers, but these are just codes for different blends, so it is a categorical variable or factor.
+```{r}
+attach(gasoline)
+head(gasoline)
+```
+Here is an interesting calculation:
+```{r}
+table(Gasoline, Automobile)
+```
+This shows us two things: 
+
+1.  we have *repeated measurements* (several observations per factor-level combination)
+
+2.  we have a *balanced design* (the same number of repetitions in each factor-level combination)
+
+This second feature used to be quite important because the calculations in a balanced design are much simpler. Nowadays with fast computers this is not important anymore. There are still good reasons why you want to design your experiment to have a balanced design if possible, though!
+```{r}
+bplot(MPG, Gasoline, new_order = "Size")
+bplot(MPG, Automobile, new_order = "Size")
+```
+the boxplots suggest a difference between blends but not between automobiles.
+  
+The summary statistics are
+```{r}
+stat.table(MPG, Gasoline, Sort = TRUE)
+stat.table(MPG, Automobile, Sort = TRUE)
+```
+
+**Interaction:**
+
+```{r}
+iplot(MPG, Gasoline, Automobile)
+```
+
+Lines are (almost) parallel, so there is no indication of interaction. We have **repeated measurements** (3 per factor-level combination), so we can test for this:
+
+```{r}
+twoway(MPG, Gasoline, Automobile)
+```
+
+1) Parameters of interest: Interaction    
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) Type I error probability $\alpha$=0.05  
+5) Null hypothesis H~0~ : no interaction  
+6) Alternative hypothesis H~a~: some interaction  
+7) p value = 0.1854 
+8) 0.1854 > 0.05, there is no evidence of interaction
+So we will now proceed without the interaction term  
+```{r}
+twoway(MPG, Gasoline, Automobile, with.interaction=FALSE)
+```
+the plots look fine, so no problem with the assumptions.
+
+Now let's test for the factors:
+
+Test for Factor Gasoline:
+
+1) Parameters of interest: means of gasoline groups  
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) Type I error probability $\alpha$ = 0.05  
+5) Null hypothesis H~0~ : $\mu_1 = .. = \mu_4$ (Gasoline groups have the same means)   
+6) Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (Gasoline groups have different means)   
+7) p value=0.000   
+8) 0.000<0.05, there is some evidence of differences in gasoline blends
+ 
+Test for Factor Automobile is not really needed because this is a blocking variable.
+
+Notice that if we included the interaction the p-value for Automobile was 0.08, without the interaction it is 0.1. One advantage of being able to fit an additive model is that often it makes the conclusions stronger. 
+
+Because automobile is not significant and there is no interaction, we can drop automobile from the analysis and treat this as a oneway ANOVA problem:
+
+```{r}
+tukey(MPG, Gasoline)
+```
+
+so all blends are stat. significantly different, with blend 1 having the highest miles per gallon.
+
+###Case Study: Film Thickness in Semiconductor Production
+
+Chemical vapor deposition is a process used in the semiconductor industry to deposit thin films of silicon dioxide and photoresit on substrates of wafers as they are manufactured. The films must be as thin as possible and have a uniform thickness, which is measured by a process called infrared interference. A process engineer wants to evaluate a low-pressure chemical vapor deposition process that reduces costs and increases productivity. The engineer has set up an experiment to study the effect of chamber temperature and pressure on film thickness.
+```{r}
+attach(filmcoatings)
+filmcoatings
+table(Temperature, Pressure)
+```
+so again we have balanced design with repetead measurements
+```{r}
+bplot(Thickness, Temperature)
+```
+Notice that the order of the boxes is strange: High-Low-Mid. This is because R uses alphabetic ordering unless told otherise. Let's change that:
+```{r}
+Temperature <- change.order(Temperature, c("Low","Mid","High"))
+Pressure <- change.order(Pressure, c("Low","Mid","High"))
+bplot(Thickness, Temperature)
+bplot(Thickness, Pressure)
+```
+Unlike in the hearing aid or gasoline experiments, here we equally interested in both factors. This type of experiment is called a **factorial design** problem.
+
+For us there is no practical difference between a randomized block design and a factorial design but the distinction can be important in other analyses.
+
+```{r}
+stat.table(Thickness, Temperature)
+stat.table(Thickness, Pressure)
+```
+**Interaction**
+```{r}
+iplot(Thickness, Temperature, Pressure)
+```
+The lines are not all parallel, so there is likely some interaction. Again we have **repeated measurements** (3 per factor-level combination), so we can actually test for this:
+
+```{r}
+twoway(Thickness, Temperature, Pressure)
+```
+
+1) Parameters of interest: Interaction  
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) Type I error probability $\alpha = 0.05$  
+5) Null hypothesis H~0~ : no interaction  
+6) Alternative hypothesis H~a~: some interaction  
+7) p value = 0.0124  
+8) 0.0124<0.05, there is some evidence of interaction  
+the graphs show that there are no problems with the assumptions
+
+Test for Factor Temperature:
+
+1) Parameters of interest: means of temperature groups  
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) Type I error probability $\alpha = 0.05$  
+5) Null hypothesis H~0~ :   $\mu_1 = \mu_2 = \mu_3$  (Temperature groups have the same means)  
+6) Alternative hypothesis H~a~:   $\mu_i \ne \mu_j$ (Temperature groups have different means)  
+7) p value = 0.000  
+8) 0.000 < 0.05, there is some evidence of differences in temperature  
+Test for Factor Pressure:
+
+1) Parameters of interest: means of pressure groups  
+  2) Method of analysis: ANOVA  
+  3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+  4) Type I error probability $\alpha = 0.05$  
+  5) Null hypothesis H~0~ : $\mu_1 = \mu_2 = \mu_3$ (Pressure groups have the same means)  
+  6) Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (Pressure groups have different means)  
+  7) p value = 0.000  
+  8) 0.000<0.05, there is some evidence of differences in pressure
+  
+Finally, what we need is to find the best combination of pressure and temperature. So what we want is a multiple comparison for Temperature and Pressure (not either of them alone!). Easily done:
+
+```{r}
+tukey(Thickness, Temperature, Pressure, which="interaction")
+```
+
+This is bit hard to read. In the past we have used the tapply command to sort the groups by their means. We want to do the same here but first we need to make a new variable that combines the Temperature and the Pressure:
+
+```{r}
+TP <- paste0(Temperature,"-",Pressure)
+TP
+sort(round(tapply(Thickness,TP,mean), 1))
+```
+
+so we see that that the combination Temperature=High, Pressure=Mid is best.
+
+But tukey tells us that it is not stat. significantly better than either of the next three combinations ( Mid Low, High Low or Mid Mid), at least not at these sample sizes.
+
+Remember we made some new variables. If we are sure we won't need them anymore we should
+
+```{r}
+rm(Temperature)
+rm(Pressure) 
+rm(TP)
+```
+
+`r hl()$hr()`
+
+A simple idea for solving this problem seems to be this one:
+
+1. find the best temperature:
+```{r}
+sort(round(tapply(Thickness, Temperature, mean), 1))
+```
+so Temperature=High is best
+
+2. find the best pressure:
+```{r}
+sort(round(tapply(Thickness, Pressure, mean), 1))
+```
+
+so Pressure=Low is best
+
+3.  take the combination: Pressure=Low, Temperature=High is best!
+Except it is not: we saw before that Pressure=Mid, Temperature=High
+is best.
+
+This simple idea does not work because of the presence of interaction. 
+
+###Case Study: Water Quality and Mining
+
+The effects of mining and rock type on water quality.
+
+```{r}
+attach(mines)
+head(mines)
+table(Rock, Mine)
+bplot(Iron, Rock, new_order = "Size")
+bplot(Iron, Mine)
+```
+
+We have a clear problem with the normal assumption, so use the log transform
+```{r}
+bplot(log(Iron), Rock, new_order = "Size")
+bplot(log(Iron), Mine)
+```
+
+This has solved the problem, so the analysis will be based on log(Iron)
+
+**Summary Statistics**
+
+Because we use a transformation we will base the tables on Median and IQR
+```{r}
+stat.table(Iron, Rock, Mean=FALSE, Sort = TRUE)
+stat.table(Iron, Mine, Mean=FALSE)
+```
+
+Note that the IQR's are very different. This is because this data set has a lot of outliers which still effect the IQR. 
+
+**Interaction**
+```{r}
+iplot(log(Iron), Rock, Mine)
+```
+ 
+There seems to be some interaction. To confirm this test for it:
+```{r}
+twoway(log(Iron), Rock, Mine)
+```
+1) Parameters of interest: Interaction  
+2) Method of analysis: ANOVA  
+3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4) Type I error probability $\alpha = 0.05$  
+5) Null hypothesis H~0~ : no interaction  
+6) Alternative hypothesis H~a~: some interaction  
+7) p value = 0.000  
+8) 0.000<0.05, there is some evidence of interaction  
+Check the assumptions of ANOVA: both plots look ok
+
+Test for Factor Rock:
+
+1) Parameters of interest: means of pressure groups  
+2) Method of analysis: ANOVA  
+  3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+  4) Type I error probability $\alpha = 0.05$  
+  5) Null hypothesis H~0~ : $\mu_1~= \mu_2$ (Rock groups have the same means)  
+  6) Alternative hypothesis H~a~: $\mu_1 \ne \mu_2$ (Rock groups have different means)   
+  7) p value = 0.035  
+8) 0.035<0.05, there is some evidence of differences in Rock types.
+
+Test for Factor Mine: 
+
+1) Parameters of interest: means of pressure groups  
+  2) Method of analysis: ANOVA  
+  3) Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+  4) Type I error probability $\alpha = 0.05$  
+  5) Null hypothesis H~0~ : $\mu_1 = \mu_2 = \mu_3$ (Mine groups have the same means)  
+  6) Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (Mine groups have different  means)   
+  7) p value = 0.000   
+  8) 0.000<0.05, there is some evidence of differences in Mine types 
+  
+**Multiple Comparison** 
+The main interest is in mines, so
+```{r}
+tukey(log(Iron), Rock, Mine, which="second")
+```
+  
+Interpretation: There is a stat. signif. difference between the mean iron content of abondoned mines and the others. The difference between unmined and reclaimed mines is not stat. sign, at least not at these sample sizes.
+
+
+```{r, echo=FALSE}
+detach(hearingaid)
+detach(gasoline)
+detach(filmcoatings)
+detach(mines)
+```

@@ -1,0 +1,503 @@
+---
+header-includes: \usepackage{color}
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: no
+---
+<style>
+table, th, td { text-align:right; }
+th, td {padding: 10px;}
+</style>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+whichcomp <- strsplit(getwd(),"/")[[1]][3]
+load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+library(knitr)
+opts_chunk$set(fig.width=6, fig.align = "center", 
+      out.width = "70%", warning=FALSE, message=FALSE)
+library(ggplot2)
+library(grid)
+```
+`r hl()$basefontsize()`
+
+#Oneway ANOVA: 
+
+
+##Categorical Predictor- Quantitative Response
+
+or
+
+##Comparing the Means of several Populations
+
+The method we will study now was first developed by 
+
+[Sir Ronald Fisher](http://en.wikipedia.org/wiki/Ronald_Fisher)
+
+![](graphs/Fischer.jpg)
+
+###Case Study: Mothers Cocain Use and Babies Health
+
+Chasnoff and others obtained several measures and responses for newborn babies whose mothers were classified by degree of cocain use.
+
+The study was conducted in the Perinatal Center for Chemical Dependence at Northwestern University Medical School. The measurement given here is the length of the newborn.
+
+Source: Cocaine abuse during pregnancy: correlation between prenatal care and perinatal outcome  
+Authors: SN MacGregor, LG Keith, JA Bachicha, and IJ Chasnoff  
+Obstetrics and Gynecology 1989;74:882-885
+
+Basic Question: **does the cocain use of the mother influence the health of the baby?**
+
+```{r}
+head(mothers)
+attach(mothers)
+table(Status)
+```
+
+So we have three groups: Drug Free, 1^st^ Trimester and Throughout. We are interested in the population mean lenghts, specifically we want to know whether they are the same. 
+
+`r hl()$hr()`
+ 
+**Note**: For historical reasons a categorical predictor is often called a *factor*
+
+`r hl()$hr()`
+
+As always we begin with  a graph. When comparing a quantitative and a categorical variable this should be the **boxplot**:
+
+```{r}
+bplot(Length, Status)
+```
+
+we see some evidence of shorter babies if the mother was using cocain longer. 
+
+`r hl()$hr()`
+
+Note that the categorical variable Status has an ordering: 
+
+Drug Free < First Trimester < Throughout
+
+Any graphs or tables should have this ordering! Here we get lucky because this is also the alphabetic ordering, otherwise we would need to change that.
+
+But there is also something very strange in what this graph says about our dataset, namely??? 
+
+`r hl()$hr()`
+
+Next a table with the summary statistics. Usually this includes the sample size, mean and standard deviations. We can use the command 
+
+```{r}
+stat.table(Length, Status)
+```
+
+By default this rounds to the one digit behind the decimal point. If we need to round differently use
+
+```{r}
+stat.table(Length, Status, ndigit=3) 
+```
+
+Finally the test.  The standard method for analyzing this type of data is called the ANOVA (ANalysis Of VAriance). If there is one factor (predictor) this is often called a **oneway** anova problem. We can run the test with the command 
+
+```{r}
+oneway(Length, Status)
+```
+
+The details of the test are:
+
+1. Parameters of interest: group means 
+2. Method of analysis: ANOVA 
+3. Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4. Type I error probability $\alpha$=0.05  
+5. Null hypothesis H~0~: $\mu_1 = \mu_2 = \mu_3$ (groups have the same means)  
+6. Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (at least two groups have different means)  
+7. p value = 0.000  
+8. 0.000 < 0.05, there is some evidence that the group means are not the same, the babies whose mothers used cocain tend to be a little shorter (less healthy?) 
+
+In step 3 we have the assumptions
+
+a. residuals have a normal distribution  
+b. groups have equal variance 
+
+The first assumption is about so called **residuals**. These are the observations minus their group means, so we could calculate
+
+```{r}
+x1 <- Length[Status == "Drug Free"]
+x1
+x1 - mean(x1)
+```
+and the same for the other groups.
+
+Now we could use the nplot command to do the graph. It is also done automatically by the oneway command!
+  
+How about the equal variance? Here we have the following rule of thumb: it is ok if the largest stdev is not more than 3 times the smallest. From the printout we see that 
+
+Smallest sd:  2.5    Largest sd : 3.6
+
+and
+
+3*2.5 = 7.5 > 3.6
+
+so this is ok as well. 
+
+`r hl()$hr()`
+
+If the normal plot is ok but there is a problem with the equal varaince we can instead run
+
+```{r, eval=FALSE}
+oneway(Length, Status, var.equal=FALSE) 
+```
+
+the oneway command has an argument ndigit which can be used to change how much rounding is done. The default is 1 digit behind the decimal. 
+
+###App: anova
+
+```{r eval=FALSE}
+run.app(anova)
+```
+
+This app shows why this method is called the Analysis of Variance 
+
+What to do: 
+
+Just run the movie. As the means move farther apart the boxplots do as well. In the begining the overall variance is close the within-group variances, but as the means move farther apart so does the overall variance from the within-group variances. So by comparing the within-group variances to the overall variance we can see whether the means are the same or not.
+
+We can choose to have all three groups different, or two the same and the third different. An interesting fact ot observe is this: if all groups are different and n=20 the p-value is 0.04 when $\mu =0.6$, but if only group C is differnt the p-value is already 0.01, so the test considers this "more different".
+
+###Ordered and Unordered Factors
+
+ANOVA in the from described here does **not** use any information regarding any ordering of the factor-levels. So for example consider the following two situations:
+
+Data Set 1: Data on the prices of T-shirts and where they were bought. Is there a difference in the prices depending on the store location?
+
+```{r, echo=FALSE}
+set.seed(12)
+x <- rnorm(90, 15, 3)
+y <- rep(c("Mall 1", "Mall 2", "Mall 3"), 30)
+x[y=="Mall 2"] <- x[y=="Mall 2"] + 2.5
+x[y=="Mall 3"] <- x[y=="Mall 3"] + 1.3
+p <- oneway(x, y, return.result = TRUE)
+bplot(x, y, label_x = "Store", label_y = "Price")
+Store <- y
+Price <- x
+```
+
+```{r fig.show='hide'}
+oneway(Price, Store)
+```
+
+Data Set 2: Data on the prices of T-shirts and their sizes. Is there a difference in the prices depending on the size? 
+
+```{r, echo=FALSE}
+y <- changeOrder(rep(c("Small", "Medium", "Large"), 30), 1:3)
+Size <- y
+bplot(x, y, label_x = "Size", label_y = "Price")
+```
+
+
+```{r fig.show='hide'}
+oneway(Price, Size)
+```
+
+So the test has the same p value in both cases (`r p[1]`), but in data set 2 there is a natural ordering of the factor "size", and the data is **not** consistent with this ordering, so here we should be much more cautious with any conclusions than in the case of data set 1.
+
+###Case Study: Flammability of Childrens Sleepwear
+
+The flammability of fabric used in children's sleepwear is tested by placing a flame under a piece of fabric until it ignites. The flame is then removed, and the fabric stops burning. The length of the charred portion of the fabric is measured. In the data set pieces of the same cloth were sent to five different laboratories, which then carried out this experiment eleven times.
+
+```{r, message=FALSE}
+head(flammability)
+attach(flammability)
+table(Labs)
+```
+
+
+###Type of variables: 
+
+Lab : Values: "Lab 1", .., "Lab 5" are text, therefore **categorical**
+
+Length: Values: 2.9, 3.1... are numerical, therefore **quantitative**
+
+one categorical and one quantitative variable &rarr; ANOVA
+
+`r hl()$hr()`
+
+Again we start with the boxplot:
+```{r}
+bplot(Length,Labs)
+```
+
+There seem to be some differences between labs. No outliers
+
+Next the table of summary statistics:
+```{r}
+ stat.table(Length, Labs, ndigit=2)
+```
+
+and finally the test:
+ 
+```{r}
+oneway(Length, Labs)
+```
+
+1. Parameters of interest: group means  
+2. Method of analysis: ANOVA  
+3. Assumptions of Method: residuals have a normal distribution, groups have equal variance  
+4. $\alpha$ = 0.05 
+5. Null hypothesis H~0~: $\mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5$ (groups have the same means)    
+6. Alternative hypothesis H~a~: $\mu_i \ne \mu_j$ (at least two groups have different means)  
+7. p value = 0.0033  
+8. 0.0033 < 0.05, there is some evidence that the group means are not the same, there are differences between the laboratories.
+
+Assumptions:
+
+a. normal residuals ok (see normal probability plot)
+
+b. equal variance: smallest stdev is 0.29, largest is 0.46  
+3*0.29 = 0.87 > 0.46, ok  
+
+###Case Study: Study Habits of Students
+
+The Survey of Study Habits and Attitudes (SSHA) is a psychological test that measures the motivation, attitude towards school, and the study habits of students. Scores range from 0 to 200. We have the scores of 20 male and 18 female first-year students at a private college. 
+
+```{r}
+head(studyhabits)
+attach(studyhabits)
+table(Gender)
+```
+
+
+Basic question: **is there a difference between the study habits of men and women?**
+
+###Type of variables: 
+
+Gender : Values: "Men", "Women" are text, therefore **categorical**
+
+Score: Values: 115, 126... are numerical, therefore **quantitative**
+
+one categorical and one quantitative variable &rarr; ANOVA
+
+```{r}
+bplot(Score, Gender)
+```
+
+Apparently the women tend to score just a little higher than the men, but the difference is not very large.
+
+```{r}
+stat.table(Score, Gender, ndigit=2) 
+```
+
+```{r}
+oneway(Score, Gender)
+```
+
+1. Parameters of interest: means of scores of men and women  
+2. Method of analysis: ANOVA   
+3. Assumptions of Method: residuals have a normal distribution, equal variance   
+4. $\alpha$ = 0.049  
+5. Null hypothesis H~0~: $\mu_1 = \mu_2$ (groups have the same mean)  
+6. Alternative hypothesis H~a~: $\mu_1 \ne \mu_2$ (groups have different means)  
+7. p value = 0.0495  
+8. 0.0495 < 0.05, there is some evidence that the group means are not the same, the women tend to score higher than the men, but it is to close to be sure just yet. This is likely because we have very small sample sizes. If at all possible one would probably try to redo the experiment with more people.
+
+Assumptions:
+a. normal residuals
+b. equal variance: smallest stdev is 26.4, largest is 32.9   
+3*26.4 = 79.2 > 32.9, ok 
+
+`r hl()$hr()`
+
+In some ways this is a special case of the ANOVA because the categorical variable has only two values (Men and Women). This case is also known as the **2-sample  problem**. 
+
+The main advantage of having a 2 sample problem is that the formulas are much simpler, but because we are not doing any calculations by hand we don't have to worry about that. There is one type of question we can answer in this situation: 
+
+what is a confidence interval for the **difference in group means**? 
+
+In fact the oneway command gives the answer, a confidence interval for the difference of the group means.
+
+###Case Study: Balance by Age
+
+Is it harder to maintain your balance while you are concentrating?
+
+Nine elderly (6 men and 3 women) and eight young men were subjects in this experiment. Each subject stood barefoot on a "force platform" and was asked to maintain a stable upright position and to react as quickly as possible to an unpredictable noise by pressing a hand held button. The noise came randomly and the subject concentrated on reacting as quickly as possible. The platform automatically measured how much each subject swayed in millimeters in both the forward/backward and the side-to-side directions.
+
+```{r}
+head(balance)
+attach(balance)
+```
+
+
+We will for now consider the side to side movement. 
+
+###Type of variables: 
+
+Age_group : Values: "elderly", "young" are text, therefore **categorical**
+
+side-by-side: Values: 14, 41... are numerical, therefore **quantitative**
+
+one categorical and one quantitative variable&rarr; ANOVA
+
+`r hl()$hr()`
+
+As before we can start with a boxplot:
+```{r}
+bplot(side_side, Age_Group)
+```
+
+clearly the elderly have more movement than the young. This is also seen in the table of summary statistics: 
+
+```{r}
+stat.table(side_side, Age_Group) 
+```
+
+Let's say that instead of testing whether the two groups have equal means we would like to find an estimate for the **difference in means**. 
+
+Now obviously we have
+
+$\overline{X}_\text{Elderly} - \overline{X}_\text{Young} = 22.2-15.1 = 7.1$
+
+The oneway command will automatically find a 95% confidence interval if the categorical variable has just two values. If we  want a 90% confidence interval for the difference of the group means, we can run
+
+```{r}
+oneway(side_side, Age_Group, conf.level=90)
+```
+
+The method that finds the confidence interval  has the same assumptions as the test: 
+
+a. normal residuals 
+some of the points fall away from the straight line, but only just a little, and that is ok.
+
+b. equal variance: 
+
+Here s~1~ = 10.3 and s~2~ = 3.9, so  3*3.9 = 11.7 > 10.3, so this is (just barely) ok
+
+`r hl()$hr()`
+
+How about the forward_backward movement? 
+
+###Type of variables: 
+
+Age_group : Values: "elderly", "young" are text, therefore **categorical**
+
+forward_backward: Values: 19, 30... are numerical, therefore **quantitative**
+
+one categorical and one quantitative variable&rarr; ANOVA
+
+
+```{r}
+bplot(forward_backward, Age_Group)
+```
+
+we see there is an outlier in the elderly group. Checking the data set we see it is observation #9. Outliers are often problematic. Here are some consequences: 
+
+```{r}
+stat.table(forward_backward, Age_Group)
+```
+
+but if we remove obs#9 we find
+
+```{r}
+stat.table(forward_backward[-9], Age_Group[-9])
+```
+
+so both the mean and the standard deviation for the elderly have changed considerably.
+
+By the way, as we learned in 3101, sometimes it is better to use the median as a measure of "average", and if so we should also use the interquartile range as a measure for "spread". So we might use a table of the form 
+
+```{r}
+stat.table(forward_backward, Age_Group, Mean=FALSE)
+```
+
+Outliers are also an indication of a problem with the normal assumption, as we can see in the normal plot:
+
+```{r}
+oneway(forward_backward, Age_Group)
+```
+
+Finally, they influence the result of the 2-sample method. Say we want to find a 95% confidence interval for the difference in forward_backward motion:
+
+```{r}
+oneway(forward_backward, Age_Group) 
+```
+
+but 
+
+```{r}
+oneway(forward_backward[-9], Age_Group[-9]) 
+```
+
+and this interval has an upper limit of about half as large.
+
+Which of these intervals is correct? The first one is wrong because the normal assumption is false, but the second one has the problem that we had to change the data, and that is something we should almost never do. So neither is very good. We will come back to this problem later.
+
+
+###Case Study: Cancer Survival
+
+![](graphs/pauling1.gif)
+
+| Name | First Nobel Price | Second Nobel Price |
+| ------ | ------ | ------ |
+| Linus Pauling | Chemistry 1954 (Studies Of Molecular Structure And The    Chemical Bond) | Peace 1962 (Fight Against Atomic Testing) |
+| Frederick Sanger | Chemistry 1958 (Determining Structure Of Insulin Molecule) | Chemistry 1980 (Biochemical Studies Of Nucleic Acids) |
+| Marie Sklodowska Curie | Physics 1903 (Discovery Of Radioactivity In Uranium) | Chemistry 1911 (Discovery of the elements radium and polonium) |
+| John Bardeen| Physics 1952 (Development of the transistor effect) | Physics 1972 (Theory of Superconductivity |
+
+Patients with advanced cancers of the stomach, bronchus, colon,
+  ovary or breast were treated with ascorbate. The purpose of the study was  to determine if patient survival differed with respect to the organ
+  affected by the cancer.
+  
+  Cameron, E. and Pauling, L. (1978) Supplemental ascorbate in the supportive treatment of cancer:  re-evaluation of prolongation of survival times in terminal human cancer.  Proceedings of the National Academy of Science USA, 
+75, 4538-4542.
+
+```{r}
+head(cancersurvival)
+attach(cancersurvival)
+table(Cancer)
+```
+
+
+###Type of variables: 
+
+Cancer : Values: "Stomach", .., "Breast" are text, therefore **categorical**
+
+Survival: Values: 124, 42... are numerical, therefore **quantitative**
+
+one categorical and one quantitative variable&rarr; ANOVA
+
+```{r}
+bplot(Survival, Cancer)  
+```
+
+Here we have a dataset with many outliers. Usually this will mean that the assumption of normal residuals will fail , and indead: 
+```{r}
+oneway(Survival, Cancer)
+```
+so what do we do now? We will see in a bit.
+
+Note that also the equal variance assumption is violated. That both assumptions are wrong is something that happens quite often!
+
+##Independence
+
+Let's return for a moment to the Mothers and Cocain Use data. There we wrote the null hypothesis as follows:
+
+H~0~: $\mu_1 = \mu_2 = \mu_3$ (groups have the same means)
+
+and this is the natural null hypothesis if we think in terms of comparing group means. But there is another way to think of this problem: 
+
+Does the drug status of the mother influence the length of the baby? 
+
+Now if the answer is no then there are  no differences between the groups (with respect to the length of the baby!), and so the null hypothesis 
+
+H~0~: $\mu_1 = \mu_2 = \mu_3$
+
+is equivalent to saying
+
+H~0~: "Drug Status" and "Length" are independent (one does not influence the other) 
+
+and we again see the same null hypothesis of independence as before in the case of categorical data!
+
+
+```{r, echo=FALSE}
+detach(mothers)
+detach(flammability)
+detach(studyhabits)
+detach(balance)
+detach(cancersurvival)
+```
