@@ -8,7 +8,7 @@ output:
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 whichcomp <- strsplit(getwd(),"/")[[1]][3]
-load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+load(paste0("c:/users/", whichcomp, "/Dropbox/teaching/Resma3/Resma3.RData"))
 require(knitr)
 require(ggplot2)
 require(grid)
@@ -17,9 +17,9 @@ require(grid)
 
 ##ESMA 3102 - Introduction to Statistics II
 
-[Resma3.RData](http://academic.uprm.edu/wrolke/Resma3/Resma3.RData?Ver 2.8) (Ver 2.8)
+[Resma3.RData](http://academic.uprm.edu/wrolke/Resma3/Resma3.RData?Ver 3.0) (Ver 3.0)
 
-All these pages are also available as pdfs [here](index_pdf.pdf).  
+All these pages are also available as a single pdf [here](ESMA-3102.pdf).  
 
 For a nice introduction to Statistics watch the PBS-NOVA episode [Prediction by the Numbers](http://www.pbs.org/video/prediction-by-the-numbers-hg2znc/)  
 

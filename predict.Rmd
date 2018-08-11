@@ -1,9 +1,9 @@
 ---
 header-includes: \usepackage{color}
 output:
-  html_document: default
   pdf_document:
     fig_caption: no
+  html_document: default
 ---
 <style>
 table, th, td { text-align:right; }
@@ -12,7 +12,7 @@ th, td {padding: 10px;}
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 whichcomp <- strsplit(getwd(),"/")[[1]][3]
-load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+load(paste0("c:/users/", whichcomp, "/Dropbox/teaching/Resma3/Resma3.RData"))
 library(knitr)
 opts_chunk$set(fig.width=6, fig.align = "center", 
       out.width = "70%", warning=FALSE, message=FALSE)
@@ -124,11 +124,10 @@ so a 90% confidence interval for the mean rating of fish after 4 hours is  (7.81
 
 The two 90% intervals are shown in the next graph, the prediction interval in green and the confidence interval in red:
 
-
-
-```{r echo=FALSE}
+```{r, echo=FALSE}
 y1 <- slr.predict(Quality, Time, newx=4, 
             interval="CI", conf.level = 90)
+
 y2 <- slr.predict(Quality, Time, newx=4, 
             interval="PI", conf.level = 90)
 plt <- splot(Quality, Time, add.line = 1, return.graph = TRUE)
@@ -138,6 +137,7 @@ plt +
   geom_segment(aes(x=4.1, y=y2[3], xend=4.1, yend=y2[4]),
                color="green",size=2) 
 ```
+
 
 Notice that the prediction intervals are always wider than the confidence intervals. They are also the ones you want most of the time. So if you are not sure which you should use, use the prediction interval.
 

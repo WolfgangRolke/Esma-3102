@@ -7,7 +7,7 @@ output:
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 whichcomp <- strsplit(getwd(),"/")[[1]][3]
-load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+load(paste0("c:/users/", whichcomp, "/Dropbox/teaching/Resma3/Resma3.RData"))
 require(knitr)
 require(ggplot2)
 require(grid)
@@ -55,14 +55,19 @@ Make sure your answers are **complete**.
 
 **Problem 1** Is there a relationship between Score and Gender? 
 Score is a quantitative variable and Gender is a categorical variable with two values, so this is a problem for ANOVA
+
 ```{r}
 bplot(Score,Gender) 
 ```
+
 The boxplot shows a slight difference between the genders. There are a few slight outliers, but they are no problem.
+
 ```{r}
 stat.table(Score, Gender)
 ```
+
 The test:
+
 ```{r}
 oneway(Score, Gender)
 ```
@@ -115,6 +120,13 @@ Assumptions:
 Score and GPA are both quantitative variables, so this is a problem for the **Pearson's Correlation Coefficient **.
 
 The marginal plot shows some increase in Score as the GPA increases.
+
+```{r warning=FALSE}
+rm(Score)
+rm(GPA)
+```
+
+
 ```{r, warning=FALSE}
 mplot(Score, GPA)
 ```
@@ -166,6 +178,9 @@ pearson.cor(Score, log(Distance+1), rho.null = 0)
 **Problem 5 ** Is there a relationship between Score and Age?
 The marginal plot shows one severe outlier:
 
+```{r echo=FALSE}
+rm(Age)
+```
 
 ```{r, warning=FALSE}
 length(Score)
