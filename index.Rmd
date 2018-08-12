@@ -21,7 +21,7 @@ require(grid)
 
 All these pages are also available as a single pdf [here](ESMA-3102.pdf).  
 
-For a nice introduction to Statistics watch the PBS-NOVA episode [Prediction by the Numbers](http://www.pbs.org/video/prediction-by-the-numbers-hg2znc/)  
+For a nice introduction to Statistics watch the PBS-NOVA episode [Prediction by the Numbers](https://www.pbs.org/video/prediction-numbers-tsrjl8/)  
 
 ###1 General Information   
 
@@ -53,7 +53,7 @@ For a nice introduction to Statistics watch the PBS-NOVA episode [Prediction by 
 
 3.7.  [Hypothesis Testing](hyptest.html) 
 
-3.8.  [The Lady Tasting Tea](../esma joint/lady-tea.html) 
+3.8.  [The Lady Tasting Tea](../esma-3015-3101/lady-tea.html) 
 
 3.9.  [Methods for one Variable](onesample.html) 
 

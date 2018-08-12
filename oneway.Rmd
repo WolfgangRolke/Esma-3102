@@ -12,7 +12,7 @@ th, td {padding: 10px;}
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 whichcomp <- strsplit(getwd(),"/")[[1]][3]
-load(paste0("c:/users/", whichcomp, "/Dropbox/Resma3/Resma3.RData"))
+load(paste0("c:/users/", whichcomp, "/Dropbox/teaching/Resma3/Resma3.RData"))
 library(knitr)
 opts_chunk$set(fig.width=6, fig.align = "center", 
       out.width = "70%", warning=FALSE, message=FALSE)
@@ -186,7 +186,7 @@ oneway(Price, Store)
 Data Set 2: Data on the prices of T-shirts and their sizes. Is there a difference in the prices depending on the size? 
 
 ```{r, echo=FALSE}
-y <- changeOrder(rep(c("Small", "Medium", "Large"), 30), 1:3)
+y <- change.order(rep(c("Small", "Medium", "Large"), 30), 1:3)
 Size <- y
 bplot(x, y, label_x = "Size", label_y = "Price")
 ```
@@ -430,7 +430,7 @@ Which of these intervals is correct? The first one is wrong because the normal a
 
 ###Case Study: Cancer Survival
 
-![](graphs/pauling1.gif)
+![](graphs/pauling1.png)
 
 | Name | First Nobel Price | Second Nobel Price |
 | ------ | ------ | ------ |
